@@ -5,8 +5,10 @@ import gitClone from 'gitclone'
 import gitParse from 'parse-github-short-url'
 import type { Config } from './types'
 
-export async function ensureSetup() {
-  await FS.mkdirp('~/.repoman')
+export async function ensureSetup(config: Config) {
+  if (!await FS.exists(this.config.repomanDir)) {
+    // copy repoman files from rootFiles
+  }
 }
 
 function cloneScripts(repo: string, dest) {
