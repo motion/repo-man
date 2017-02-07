@@ -16,8 +16,7 @@
     "babel-preset-steelbrain": "^4.0.2"
   },
   "dependencies": {
-    "gitclone": "^2.0.0",
-    "parse-github-short-url": "^3.2.0",
+    "eslint-config-steelbrain": "^2.0.0",
     "process-bootstrap": "^1.0.0",
     "sb-command": "^1.0.0",
     "sb-fs": "^1.1.1"
