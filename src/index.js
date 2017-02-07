@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @flow
 
 import command from 'sb-command'
 import Path from 'path'
