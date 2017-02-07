@@ -21,6 +21,10 @@ function cloneScripts(repo: string, dest) {
   })
 }
 
+async function ensureScriptsDir(dir) {
+  await FS.mkdirp(Path.join(dir, 'scripts'))
+}
+
 export async function ensureScripts(dir: string, config: Config) {
   const pkg = await FS.readFile(Path.join(dir, 'package.json'))
 
@@ -40,8 +44,9 @@ export async function ensureScripts(dir: string, config: Config) {
     throw new Error(`Could not parse repo from: ${repo.toString()}`)
   }
 
-  const dest = Path.join(config.repomanDir, repo.split('/').join('-'))
+  const dest = Path.join(config.repomanDir, 'scripts', repo.split('/').join('-'))
 
+  await ensureScriptsDir(config.repomanDir)
   await cloneScripts(pkgScripts, dest)
 
   return pkgScripts
