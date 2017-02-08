@@ -6,6 +6,7 @@ import promisify from 'sb-promisify'
 import { rPad, lPad } from '../helpers'
 
 const npmInfo = promisify(pkgInfo)
+const NEWLINE = "\n"
 
 export default class Status {
   constructor(repos) {
@@ -39,14 +40,23 @@ export default class Status {
       const log = {
         gitstatus: `${GIT_DIRTY_FLAG} ${rPad(`${GIT_NUM_FILES}`, 3)}`,
         name: `${rPad(name, 10)}`,
-        gitlocation: `${Color.yellow(lPad(LOCAL, 12))}:${rPad(REMOTE, 12)}`,
-        location: `${lPad(path, 25)}`,
+        gitlocation: rPad(`${Color.yellow(LOCAL)}:${REMOTE}`, 30),
+        location: `${lPad(path, 26)}`,
         npm: lPad(`${Color.yellow(version)} ${Figures.arrowRight} ${npm.version}`, 15),
       }
 
       return `${log.gitstatus} ${log.name} | ${log.npm} | ${log.location} | ${log.gitlocation}`
     }
 
-    console.log(repoInfos.map(repoLog).join("\n")) 
+    const header = [
+      Color.bgYellow.white(' git '),
+      Color.bgCyan.white('    name    '),
+      Color.bgMagenta.white('    npm version    '),
+      Color.bgBlue.white('            path            '),
+      Color.bgGreen.white('             branch             '),
+    ].join("")
+
+    console.log(NEWLINE+header)
+    console.log(repoInfos.map(repoLog).join(NEWLINE), NEWLINE)
   }
 }

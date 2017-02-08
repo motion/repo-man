@@ -34,9 +34,9 @@ const colorLen = (text: string) => {
   return text.replace(COLOR, '').length
 }
 
-const ellipse = (str: string, amt: number, right = false) => {
+const ellipse = (str: string, amt: number, cutLeft = false) => {
   if (colorLen(str) > amt + 1) {
-    if (!right) {
+    if (cutLeft) {
       return str.slice(0, amt - 3) + '...'
     }
     return '...' + str.slice(-(amt + 3))
