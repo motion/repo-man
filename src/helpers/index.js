@@ -89,8 +89,6 @@ export function getSuggestedDirectoryName(uri: string): string {
   chunks = chunks[chunks.length - 1].split('/')
   return chunks.slice(-2).join('-')
 }
-export const rPad = (str, amt) => pad(`${str}`, amt, ' ', true)
-export const lPad = (str, amt) => pad(amt, `${str}`, ' ', true)
 
 const COLOR = /\x1B\[(?:[0-9]{1,2}(?:;[0-9]{1,2})?)?[m|K]/g
 const colorLen = (text: string) => {
