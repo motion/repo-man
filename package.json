@@ -5,7 +5,6 @@
   "bin": {
     "repoman": "./lib/cli.js"
   },
-  "main": "lib/index.js",
   "scripts": {
     "build": "rm -rf lib; babel src --out-dir lib",
     "watch": "npm run build -- --watch"

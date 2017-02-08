@@ -4,34 +4,53 @@
 import command from 'sb-command'
 import manifest from '../package.json'
 import RepoMan from './'
+import { BUILTIN_COMMANDS } from './helpers'
 
 require('process-bootstrap')('repoman')
 
-function repoManify(callback: Function) {
-  return function(...params) {
-    RepoMan.get().then(function(repoMan) {
-      return callback(...[repoMan].concat(params))
-    }).catch(function(error) {
-      if (error && error.name === 'RepoManError') {
-        console.log('Error:', error.message)
-      } else {
-        console.log('Error', error)
-      }
-      process.exitCode = 1
-    })
+// Local helper function
+function handleError(error) {
+  if (error && error.name === 'RepoManError') {
+    console.log('Error:', error.message)
+  } else {
+    console.log('Error', error)
   }
+  process.exit(1)
 }
 
-command
-  .version(manifest.version)
-  .description('Manage your repos')
-  // .command('publish [repos...]', 'Release new versions', RepoMan.release)
-  .command('status', 'Get status of repos', repoManify(repoMan => repoMan.status()))
-  // .command('exec', 'Exec shell command in every repo', RepoMan.run)
-  // .command('bootstrap', 'Bootstrap package', RepoMan.bootstrap)
-  // .default(RepoMan.status)
-  .command('get <remote_path>', 'Clone the given path into Projects root', repoManify((repoMan, _, remotePath) => repoMan.get(remotePath)))
-  .default(function() {
-    console.log('Welcome to RepoMan. Use --help to get list of available commands')
-  })
-  .parse(process.argv)
+RepoMan.get().then(function(repoMan) {
+  // Basic setup
+  command
+    .version(manifest.version)
+    .description('Repository management tool')
+
+  const commands = repoMan.getCommands()
+  const registerCommand = (c) => {
+    console.log(c.name)
+    command.command(c.name, c.description, c.callback)
+  }
+
+  // Plug the known builtin commands
+  commands
+    .filter(c => BUILTIN_COMMANDS.has(c.name))
+    .forEach(registerCommand)
+
+  // Plug the non-builtin commands
+  commands
+    .filter(c => !BUILTIN_COMMANDS.has(c.name))
+    .forEach(registerCommand)
+
+  // Default stuff
+  command.default(function() { console.log('Welcome to RepoMan. Use --help to get list of available commands') })
+
+  // Run it
+  const processed = command.parse(process.argv, true)
+  if (processed.errorMessage) {
+    console.log('Error:', processed.errorMessage)
+  }
+  if (processed.errorMessage || processed.options.help) {
+    command.showHelp('repoman')
+    return null
+  }
+  return processed.callback(processed.options, processed.parameters)
+}).catch(handleError)

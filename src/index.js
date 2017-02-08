@@ -7,7 +7,7 @@ import copy from 'sb-copy'
 import Context from './context'
 import Status from './commands/status'
 import * as Helpers from './helpers'
-import type { Options } from './types'
+import type { Options, Command } from './types'
 
 const PRIVATE = {}
 
@@ -20,6 +20,9 @@ class RepoMan {
     }
     this.options = options
     this.context = new Context(options)
+  }
+  getCommands(): Array<Command> {
+    return this.context.getCommands()
   }
   async get(path: string): Promise<number> {
     // clones the repo into projects dir

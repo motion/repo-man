@@ -5,6 +5,7 @@ import expandTilde from 'expand-tilde'
 
 import type { Options } from '../types'
 
+export const BUILTIN_COMMANDS = new Set(['get', 'status', 'exec', 'bootstrap', 'publish'])
 export class RepoManError extends Error {
   constructor(message: string) {
     super(message)
