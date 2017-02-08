@@ -26,18 +26,15 @@ RepoMan.get().then(function(repoMan) {
 
   const commands = repoMan.getCommands()
   const registerCommand = (c) => {
-    command.command(c.name, c.description, c.callback)
+    const prefix = BUILTIN_COMMANDS.has(c.name) ? 'run.' : ''
+    command.command(`${prefix}${c.name}`, c.description, c.callback)
   }
 
-  // Plug the known builtin commands
-  commands
-    .filter(c => BUILTIN_COMMANDS.has(c.name))
-    .forEach(registerCommand)
+  // First register builtin commands
+  commands.filter(c => BUILTIN_COMMANDS.has(c.name)).forEach(registerCommand)
 
-  // Plug the non-builtin commands
-  commands
-    .filter(c => !BUILTIN_COMMANDS.has(c.name))
-    .forEach(registerCommand)
+  // Then register non-builtin commands
+  commands.filter(c => !BUILTIN_COMMANDS.has(c.name)).forEach(registerCommand)
 
   // Default stuff
   command.default(function() { console.log('Welcome to RepoMan. Use --help to get list of available commands') })
@@ -47,7 +44,7 @@ RepoMan.get().then(function(repoMan) {
   if (processed.errorMessage) {
     console.log('Error:', processed.errorMessage)
   }
-  if (processed.errorMessage || processed.options.help) {
+  if (processed.errorMessage || processed.options.help || !processed.callback) {
     command.showHelp('repoman')
     return null
   }

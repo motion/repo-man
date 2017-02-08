@@ -6,7 +6,7 @@ import * as Helpers from './helpers'
 import { RepoManError } from '../../helpers'
 
 export const name = 'get <remote_path>'
-export const description = 'Clone the given path into Projects root'
+export const description = 'Clone the given path into projects root'
 export async function callback(_: Object, path: string) {
   // clones the repo into projects dir
   const parsed = Helpers.parseSourceURI(path)
