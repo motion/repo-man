@@ -1,12 +1,12 @@
 import Color from 'cli-color'
 import Figures from 'figures'
-import gitStatus from '../helpers/gitStatus'
 import pkgInfo from 'package-info'
 import promisify from 'sb-promisify'
-import { rPad, lPad } from '../helpers'
+import { rPad, lPad } from './helpers'
+import gitStatus from '../helpers/gitStatus'
 
 const npmInfo = promisify(pkgInfo)
-const NEWLINE = "\n"
+const NEWLINE = '\n'
 
 export default class Status {
   constructor(repos) {
