@@ -7,7 +7,7 @@
   },
   "main": "lib/index.js",
   "scripts": {
-    "build": "babel src --out-dir lib",
+    "build": "rm -rf lib; babel src --out-dir lib",
     "watch": "npm run build -- --watch"
   },
   "author": "Motion (motion.io)",

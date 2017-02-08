@@ -3,28 +3,53 @@
 import Path from 'path'
 import FS from 'sb-fs'
 import copy from 'sb-copy'
-import ConfigFile from 'sb-config-file'
+
+import Context from './context'
 import Status from './commands/status'
 import * as Helpers from './helpers'
 
 const PRIVATE = {}
 
 class RepoMan {
-  state: ConfigFile;
-  config: ConfigFile;
+  context: Context;
   stateDirectory: string;
   constructor(something: Object, stateDirectory: string) {
     if (something !== PRIVATE) {
       throw new Error('Invalid invocation of new RepoMan() use RepoMan.create() instead')
     }
+    this.context = new Context(stateDirectory)
     this.stateDirectory = stateDirectory
-    this.state = new ConfigFile(Path.join(stateDirectory, 'state.json'))
-    this.config = new ConfigFile(Path.join(stateDirectory, 'config.json'))
   }
-  async get(path: string) {
+  async get(path: string): Promise<number> {
     // clones the repo into projects dir
-    const projectRoot = this.config.get('projectRoot')
-    console.log(projectRoot, path)
+    const parsed = Helpers.parseSourceURI(path)
+    const projectRoot = this.context.getProjectRoot()
+    const projectRootPath = Helpers.processPath(projectRoot)
+    const targetName = Helpers.getSuggestedDirectoryName(parsed.uri)
+    const targetDirectory = Path.join(projectRootPath, targetName)
+
+    await FS.mkdirp(projectRootPath)
+    if (await FS.exists(targetDirectory)) {
+      throw new Helpers.RepoManError(`Directory ${targetName} already exists in Project root`)
+    }
+    const params = ['clone', parsed.uri, targetDirectory]
+    const logOutput = (givenChunk) => {
+      const chunk = givenChunk.toString('utf8').trim()
+      if (chunk.length) {
+        this.context.log(chunk, true)
+      }
+    }
+    const cloneExitCode = await this.context.spawn('git', params, { cwd: projectRootPath }, logOutput, logOutput)
+    if (cloneExitCode !== 0) {
+      return 1
+    }
+    if (parsed.tag) {
+      const tagExitCode = await this.context.spawn('git', ['checkout', parsed.tag], { cwd: targetDirectory }, logOutput, logOutput)
+      if (tagExitCode !== 0) {
+        return 1
+      }
+    }
+    return 0
   }
   static async get(givenStateDirectory: ?string = null): Promise<RepoMan> {
     const stateDirectory = Helpers.getStateDirectory(givenStateDirectory)

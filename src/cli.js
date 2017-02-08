@@ -29,7 +29,6 @@ command
   // .command('bootstrap', 'Bootstrap package', RepoMan.bootstrap)
   // .default(RepoMan.status)
   .command('get <remote_path>', 'Clone the given path into Projects root', repoManify(function(repoMan, _, remotePath) {
-    console.log(`Clonning into '${repoMan.config.get('projectRoot')}'`)
     return repoMan.get(remotePath)
   }))
   .default(function() {
