@@ -32,11 +32,12 @@ class RepoMan {
     if (await FS.exists(targetDirectory)) {
       throw new Helpers.RepoManError(`Directory ${targetName} already exists in Project root`)
     }
+
     const params = ['clone', parsed.uri, targetDirectory]
     const logOutput = (givenChunk) => {
-      const chunk = givenChunk.toString('utf8').trim()
+      const chunk = givenChunk.toString('utf8').trim().replace(/\n/g, ' ')
       if (chunk.length) {
-        this.context.log(chunk, true)
+        this.context.log(chunk)
       }
     }
     const cloneExitCode = await this.context.spawn('git', params, { cwd: projectRootPath }, logOutput, logOutput)
@@ -44,11 +45,12 @@ class RepoMan {
       return 1
     }
     if (parsed.tag) {
-      const tagExitCode = await this.context.spawn('git', ['checkout', parsed.tag], { cwd: targetDirectory }, logOutput, logOutput)
+      const tagExitCode = await this.context.spawn('git', ['checkout', parsed.tag], { cwd: targetDirectory }, null, null)
       if (tagExitCode !== 0) {
         return 1
       }
     }
+    this.context.log(`'${targetName}' successfully cloned`)
     return 0
   }
   static async get(givenStateDirectory: ?string = null): Promise<RepoMan> {

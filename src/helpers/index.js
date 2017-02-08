@@ -4,7 +4,12 @@ import pad from 'pad/lib/colors'
 import invariant from 'assert'
 import expandTilde from 'expand-tilde'
 
-export class RepoManError extends Error {}
+export class RepoManError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'RepoManError'
+  }
+}
 
 export function processPath(path: string): string {
   return expandTilde(path)

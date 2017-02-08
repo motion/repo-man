@@ -16,18 +16,21 @@ export default class Context {
   getProjectRoot(): string {
     return this.config.get('projectRoot')
   }
-  async spawn(name: string, parameters: Array<string>, options: Object, onStdout: ((chunk: string) => any), onStderr: ((chunk: string) => any)) {
+  async spawn(name: string, parameters: Array<string>, options: Object, onStdout: ?((chunk: string) => any), onStderr: ?((chunk: string) => any)) {
     return new Promise((resolve, reject) => {
       const spawned = ChildProcess.spawn(name, parameters, options)
-      spawned.stdout.on('data', onStdout)
-      spawned.stderr.on('data', onStderr)
+      if (onStdout) {
+        spawned.stdout.on('data', onStdout)
+      }
+      if (onStderr) {
+        spawned.stderr.on('data', onStderr)
+      }
       spawned.on('close', resolve)
       spawned.on('error', reject)
     })
   }
 
-  log(text: string/* , replaceLastLine: boolean = false */) {
-    // TODO: Make this more advanced
-    console.log(text.toString())
+  log(text: string) {
+    console.log(text)
   }
 }

@@ -12,7 +12,11 @@ function repoManify(callback: Function) {
     RepoMan.get().then(function(repoMan) {
       return callback(...[repoMan].concat(params))
     }).catch(function(error) {
-      console.log('Error', error)
+      if (error && error.name === 'RepoManError') {
+        console.log('Error:', error.message)
+      } else {
+        console.log('Error', error)
+      }
       process.exitCode = 1
     })
   }
