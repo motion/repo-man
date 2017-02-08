@@ -1,5 +1,6 @@
 // @flow
 
+import pad from 'pad/lib/colors'
 import invariant from 'assert'
 import expandTilde from 'expand-tilde'
 
@@ -27,3 +28,6 @@ export function getStateDirectory(given: ?string): string {
 
   return processPath(stateDirectory)
 }
+
+export const rPad = (str, amt) => pad(`${str}`, amt, ' ', true)
+export const lPad = (str, amt) => pad(amt, `${str}`, ' ', true)

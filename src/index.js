@@ -4,6 +4,7 @@ import Path from 'path'
 import FS from 'sb-fs'
 import copy from 'sb-copy'
 import ConfigFile from 'sb-config-file'
+import Status from './commands/status'
 import * as Helpers from './helpers'
 
 const PRIVATE = {}
@@ -34,6 +35,13 @@ class RepoMan {
     })
 
     return new RepoMan(PRIVATE, stateDirectory)
+  }
+  async status() {
+    const repos = [
+      { name: 'gloss', path: '/Users/nw/company/gloss' },
+      { name: 'repoman', path: '/Users/nw/projects/repoman' },
+    ]
+    await new Status(repos).print()
   }
 }
 

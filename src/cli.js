@@ -22,7 +22,9 @@ command
   .version(manifest.version)
   .description('Manage your repos')
   // .command('publish [repos...]', 'Release new versions', RepoMan.release)
-  // .command('status', 'Get status of repos', RepoMan.status)
+  .command('status', 'Get status of repos', repoManify((repoMan, _, remotePath) => {
+    repoMan.status()
+  }))
   // .command('exec', 'Exec shell command in every repo', RepoMan.run)
   // .command('bootstrap', 'Bootstrap package', RepoMan.bootstrap)
   // .default(RepoMan.status)
