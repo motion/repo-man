@@ -7,18 +7,19 @@ import copy from 'sb-copy'
 import Context from './context'
 import Status from './commands/status'
 import * as Helpers from './helpers'
+import type { Options } from './types'
 
 const PRIVATE = {}
 
 class RepoMan {
+  options: Options;
   context: Context;
-  stateDirectory: string;
-  constructor(something: Object, stateDirectory: string) {
+  constructor(something: Object, options: Options) {
     if (something !== PRIVATE) {
       throw new Error('Invalid invocation of new RepoMan() use RepoMan.create() instead')
     }
-    this.context = new Context(stateDirectory)
-    this.stateDirectory = stateDirectory
+    this.options = options
+    this.context = new Context(options)
   }
   async get(path: string): Promise<number> {
     // clones the repo into projects dir
@@ -34,7 +35,7 @@ class RepoMan {
 
     const params = ['clone', parsed.uri, targetDirectory]
     const logOutput = (givenChunk) => {
-      const chunk = givenChunk.toString('utf8').trim().replace(/\n/g, ' ')
+      const chunk = givenChunk.toString('utf8').trim()
       if (chunk.length) {
         this.context.log(chunk)
       }
@@ -60,15 +61,15 @@ class RepoMan {
     await new Status(repos).print()
   }
   // NOTE: All commands or class methods should be ABOVE this method
-  static async get(givenStateDirectory: ?string = null): Promise<RepoMan> {
-    const stateDirectory = Helpers.getStateDirectory(givenStateDirectory)
-    await FS.mkdirp(stateDirectory)
-    await copy(Path.normalize(Path.join(__dirname, '..', 'template', 'root')), stateDirectory, {
+  static async get(givenOptions: Object = {}): Promise<RepoMan> {
+    const options = Helpers.fillConfig(givenOptions)
+    await FS.mkdirp(options.stateDirectory)
+    await copy(Path.normalize(Path.join(__dirname, '..', 'template', 'root')), options.stateDirectory, {
       overwrite: false,
       failIfExists: false,
     })
 
-    return new RepoMan(PRIVATE, stateDirectory)
+    return new RepoMan(PRIVATE, options)
   }
 }
 

@@ -3,6 +3,8 @@
 import invariant from 'assert'
 import expandTilde from 'expand-tilde'
 
+import type { Options } from '../types'
+
 export class RepoManError extends Error {
   constructor(message: string) {
     super(message)
@@ -20,19 +22,20 @@ export function processPath(path: string): string {
 // - Given
 // - Environment Variable
 // - Default
-export function getStateDirectory(given: ?string): string {
-  let stateDirectory
+export function fillConfig(given: Object): Options {
+  const options = {}
 
-  if (given) {
-    invariant(typeof given === 'string', 'stateDirectory must be a string')
-    stateDirectory = given
+  if (given.stateDirectory) {
+    invariant(typeof given.stateDirectory === 'string', 'options.stateDirectory must be a string')
+    options.stateDirectory = given.stateDirectory
   } else if (process.env.REPOMAN_STATE_DIRECTORY) {
-    stateDirectory = process.env.REPOMAN_STATE_DIRECTORY
+    options.stateDirectory = process.env.REPOMAN_STATE_DIRECTORY
   } else {
-    stateDirectory = '~/.repoman'
+    options.stateDirectory = '~/.repoman'
   }
+  options.stateDirectory = processPath(options.stateDirectory)
 
-  return processPath(stateDirectory)
+  return options
 }
 
 // TODO(steelbrain): Make this a separate module

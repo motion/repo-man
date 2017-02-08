@@ -4,16 +4,18 @@ import FS from 'sb-fs'
 import Path from 'path'
 import ConfigFile from 'sb-config-file'
 import ChildProcess from 'child_process'
+
 import * as Helpers from '../helpers'
+import type { Options } from '../types'
 
 export default class Context {
   state: ConfigFile;
   config: ConfigFile;
-  stateDirectory: string;
-  constructor(stateDirectory: string) {
-    this.stateDirectory = stateDirectory
-    this.state = new ConfigFile(Path.join(stateDirectory, 'state.json'))
-    this.config = new ConfigFile(Path.join(stateDirectory, 'config.json'))
+  options: Options;
+  constructor(options: Options) {
+    this.state = new ConfigFile(Path.join(options.stateDirectory, 'state.json'))
+    this.config = new ConfigFile(Path.join(options.stateDirectory, 'config.json'))
+    this.options = options
   }
   getProjectsRoot(): string {
     return Helpers.processPath(this.config.get('projectsRoot'))
