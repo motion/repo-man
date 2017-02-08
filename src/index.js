@@ -4,17 +4,10 @@ import Path from 'path'
 import FS from 'sb-fs'
 import copy from 'sb-copy'
 import ConfigFile from 'sb-config-file'
-import Prompt from './helpers/prompt'
-import gitStatus from './helpers/gitStatus'
-import Color from 'cli-color'
-import Figures from 'figures'
-import pad from 'pad/lib/colors'
+import Status from './commands/status'
 import * as Helpers from './helpers'
 
 const PRIVATE = {}
-
-const rpad = (str, amt) => pad(`${str}`, amt, ' ', true)
-const lpad = (str, amt) => pad(amt, `${str}`, ' ', true)
 
 class RepoMan {
   state: ConfigFile;
@@ -48,35 +41,7 @@ class RepoMan {
       { name: 'gloss', path: '/Users/nw/company/gloss' },
       { name: 'repoman', path: '/Users/nw/projects/repoman' },
     ]
-
-    const repoInfos = await Promise.all(repos.map(async repo => {
-      const status = await gitStatus({ cwd: repo.path })
-      return {
-        ...repo,
-        status,
-      }
-    }))
-
-    const Symbols = {
-      check: Color.green(Figures.tick),
-      x: Color.red(Figures.cross),
-      star: Color.yellow(Figures.star),
-    }
-
-    const repoLog = ({ status, name }) => {
-      const GIT_DIRTY_FLAG = status.clean ? Symbols.check : Symbols.x
-      const GIT_NUM_FILES = status.files.length
-      const LOCAL = status.local_branch
-      const REMOTE = status.remote_branch
-      const log = {
-        gitstatus: `${GIT_DIRTY_FLAG} ${rpad(GIT_NUM_FILES, 3)}`,
-        name: `${rpad(name, 10)}`,
-        gitlocation: `${Color.yellow(lpad(LOCAL, 10))} : ${rpad(REMOTE, 10)}`,
-      }      
-      return `${log.gitstatus} ${log.name} | ${log.gitlocation}`
-    }
-
-    console.log(repoInfos.map(repoLog).join("\n"))
+    await new Status(repos).print()
   }
 }
 
