@@ -6,6 +6,6 @@ export type Options = {
 
 export type Command = {
   name: string,
-  callback: (() => any),
+  callback: Function,
   description: string,
 }

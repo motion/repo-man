@@ -26,7 +26,6 @@ RepoMan.get().then(function(repoMan) {
 
   const commands = repoMan.getCommands()
   const registerCommand = (c) => {
-    console.log(c.name)
     command.command(c.name, c.description, c.callback)
   }
 
@@ -52,5 +51,5 @@ RepoMan.get().then(function(repoMan) {
     command.showHelp('repoman')
     return null
   }
-  return processed.callback(processed.options, processed.parameters)
+  return processed.callback(processed.options, ...processed.parameters)
 }).catch(handleError)

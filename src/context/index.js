@@ -58,15 +58,15 @@ export default class Context {
       callback: (...params) => callback.apply(this, params),
     }))
   }
-  addCommand(name: string, description: string, callback: (() => any)) {
+  addCommand(name: string, description: string, callback: Function) {
     invariant(typeof name === 'string', 'name must be a string')
     invariant(typeof description === 'string', 'description must be a string')
-    invariant(typeof callback === 'string', 'callback must be a function')
+    invariant(typeof callback === 'function', 'callback must be a function')
 
     this.removeCommand(name)
     this.commands.push({ name, description, callback })
   }
-  removeCommand(name: string, callback: ?(() => any) = null) {
+  removeCommand(name: string, callback: ?Function = null) {
     let i = this.commands.length
     while (i--) {
       const entry = this.commands[i]

@@ -13,7 +13,8 @@
   "license": "MIT",
   "devDependencies": {
     "babel-cli": "^6.22.2",
-    "babel-preset-steelbrain": "^4.0.2"
+    "babel-preset-steelbrain": "^4.0.2",
+    "flow-bin": "^0.38.0"
   },
   "dependencies": {
     "cli-color": "^1.1.0",
