@@ -1,6 +1,6 @@
 import inquirer from 'inquirer'
 import { LineBuffer, Line } from 'clui'
-import clc from 'cli-color'
+import Color from 'cli-color'
 
 export default class Prompt {
   static list(options) {
@@ -36,8 +36,8 @@ export default class Prompt {
 
       row.forEach(col => {
         const [name, color] = Array.isArray(col) ?
-          [col[0], clc[col[1]]] :
-          [col, clc.white]
+          [col[0], Color[col[1]]] :
+          [col, Color.white]
 
         line.column(name, colWidth, [color])
       })
