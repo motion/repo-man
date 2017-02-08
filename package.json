@@ -29,6 +29,7 @@
     "sb-config-file": "^1.1.0",
     "sb-copy": "^1.0.1",
     "sb-fs": "^1.1.1",
-    "sb-promisify": "^2.0.1"
+    "sb-promisify": "^2.0.1",
+    "tildify": "^1.2.0"
   }
 }

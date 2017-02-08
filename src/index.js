@@ -24,11 +24,10 @@ class RepoMan {
     // clones the repo into projects dir
     const parsed = Helpers.parseSourceURI(path)
     const projectsRoot = this.context.getProjectsRoot()
-    const projectsRootPath = Helpers.processPath(projectsRoot)
     const targetName = Helpers.getSuggestedDirectoryName(parsed.uri)
-    const targetDirectory = Path.join(projectsRootPath, targetName)
+    const targetDirectory = Path.join(projectsRoot, targetName)
 
-    await FS.mkdirp(projectsRootPath)
+    await FS.mkdirp(projectsRoot)
     if (await FS.exists(targetDirectory)) {
       throw new Helpers.RepoManError(`Directory ${targetName} already exists in Project root`)
     }
@@ -40,7 +39,7 @@ class RepoMan {
         this.context.log(chunk)
       }
     }
-    const cloneExitCode = await this.context.spawn('git', params, { cwd: projectsRootPath }, logOutput, logOutput)
+    const cloneExitCode = await this.context.spawn('git', params, { cwd: projectsRoot }, logOutput, logOutput)
     if (cloneExitCode !== 0) {
       return 1
     }
@@ -53,6 +52,14 @@ class RepoMan {
     this.context.log(`'${targetName}' successfully cloned`)
     return 0
   }
+  async status() {
+    const repos = [
+      { name: 'gloss', version: '0.8.0', path: '/Users/nw/company/gloss' },
+      { name: 'repoman', version: '1.0.0', path: '/Users/nw/projects/repoman' },
+    ]
+    await new Status(repos).print()
+  }
+  // NOTE: All commands or class methods should be ABOVE this method
   static async get(givenStateDirectory: ?string = null): Promise<RepoMan> {
     const stateDirectory = Helpers.getStateDirectory(givenStateDirectory)
     await FS.mkdirp(stateDirectory)
@@ -62,13 +69,6 @@ class RepoMan {
     })
 
     return new RepoMan(PRIVATE, stateDirectory)
-  }
-  async status() {
-    const repos = [
-      { name: 'gloss', version: '0.8.0', path: '/Users/nw/company/gloss' },
-      { name: 'repoman', version: '1.0.0', path: '/Users/nw/projects/repoman' },
-    ]
-    await new Status(repos).print()
   }
 }
 
