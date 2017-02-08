@@ -64,17 +64,15 @@ class RepoMan {
     }
 
     const repoLog = ({ status, name }) => {
-      const GIT_STATUS = status.clean ? Symbols.check : Symbols.x
-      const GIT_FILES = status.files.length
+      const GIT_DIRTY_FLAG = status.clean ? Symbols.check : Symbols.x
+      const GIT_NUM_FILES = status.files.length
       const LOCAL = status.local_branch
       const REMOTE = status.remote_branch
-
       const log = {
-        gitstatus: `${GIT_STATUS} ${rpad(GIT_FILES, 3)}`,
+        gitstatus: `${GIT_DIRTY_FLAG} ${rpad(GIT_NUM_FILES, 3)}`,
         name: `${rpad(name, 10)}`,
         gitlocation: `${Color.yellow(lpad(LOCAL, 10))} : ${rpad(REMOTE, 10)}`,
-      }
-      
+      }      
       return `${log.gitstatus} ${log.name} | ${log.gitlocation}`
     }
 
