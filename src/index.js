@@ -38,8 +38,8 @@ class RepoMan {
   }
   async status() {
     const repos = [
-      { name: 'gloss', path: '/Users/nw/company/gloss' },
-      { name: 'repoman', path: '/Users/nw/projects/repoman' },
+      { name: 'gloss', version: '0.8.0', path: '/Users/nw/company/gloss' },
+      { name: 'repoman', version: '1.0.0', path: '/Users/nw/projects/repoman' },
     ]
     await new Status(repos).print()
   }
