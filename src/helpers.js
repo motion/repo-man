@@ -3,6 +3,9 @@
 import invariant from 'assert'
 import expandTilde from 'expand-tilde'
 
+export function processPath(path: string): string {
+  return expandTilde(path)
+}
 // Spec:
 // If one is given, validate it to be a valid string
 // Return the expanded tilde
@@ -22,5 +25,5 @@ export function getStateDirectory(given: ?string): string {
     stateDirectory = '~/.repoman'
   }
 
-  return expandTilde(stateDirectory)
+  return processPath(stateDirectory)
 }

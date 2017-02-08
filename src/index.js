@@ -20,20 +20,20 @@ class RepoMan {
     this.state = new ConfigFile(Path.join(stateDirectory, 'state.json'))
     this.config = new ConfigFile(Path.join(stateDirectory, 'config.json'))
   }
-  async initialize() {
-    await FS.mkdirp(this.stateDirectory)
-    await copy(Path.normalize(Path.join(__dirname, '..', 'template', 'root')), this.stateDirectory, {
+  async get(path: string) {
+    // clones the repo into projects dir
+    const projectRoot = this.config.get('projectRoot')
+    console.log(projectRoot, path)
+  }
+  static async get(givenStateDirectory: ?string = null): Promise<RepoMan> {
+    const stateDirectory = Helpers.getStateDirectory(givenStateDirectory)
+    await FS.mkdirp(stateDirectory)
+    await copy(Path.normalize(Path.join(__dirname, '..', 'template', 'root')), stateDirectory, {
       overwrite: false,
       failIfExists: false,
     })
-  }
-  async get() {
-    // clones the repo into projects dir
-  }
-  static async get(stateDirectory: ?string = null): Promise<RepoMan> {
-    const repoMan = new RepoMan(PRIVATE, Helpers.getStateDirectory(stateDirectory))
-    await repoMan.initialize()
-    return repoMan
+
+    return new RepoMan(PRIVATE, stateDirectory)
   }
 }
 
