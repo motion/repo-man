@@ -1,7 +1,7 @@
 {
   "name": "repo-man",
   "version": "0.0.1",
-  "description": "",
+  "description": "Repository management tool",
   "bin": {
     "repoman": "./lib/cli.js"
   },
@@ -10,7 +10,7 @@
     "build": "babel src --out-dir lib",
     "watch": "npm run build -- --watch"
   },
-  "author": "Motion <natewienert@gmail.com> (motion.io)",
+  "author": "Motion (motion.io)",
   "license": "MIT",
   "devDependencies": {
     "babel-cli": "^6.22.2",
