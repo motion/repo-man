@@ -3,8 +3,9 @@
   "version": "0.0.1",
   "description": "",
   "bin": {
-    "repoman": "./lib/index.js"
+    "repoman": "./lib/cli.js"
   },
+  "main": "lib/index.js",
   "scripts": {
     "build": "babel src --out-dir lib",
     "watch": "npm run build -- --watch"
@@ -17,8 +18,11 @@
   },
   "dependencies": {
     "eslint-config-steelbrain": "^2.0.0",
+    "expand-tilde": "^2.0.2",
     "process-bootstrap": "^1.0.0",
     "sb-command": "^1.0.0",
+    "sb-config-file": "^1.0.0",
+    "sb-copy": "^1.0.1",
     "sb-fs": "^1.1.1"
   }
 }
