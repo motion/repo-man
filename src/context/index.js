@@ -13,8 +13,8 @@ export default class Context {
     this.state = new ConfigFile(Path.join(stateDirectory, 'state.json'))
     this.config = new ConfigFile(Path.join(stateDirectory, 'config.json'))
   }
-  getProjectRoot(): string {
-    return this.config.get('projectRoot')
+  getProjectsRoot(): string {
+    return this.config.get('projectsRoot')
   }
   async spawn(name: string, parameters: Array<string>, options: Object, onStdout: ?((chunk: string) => any), onStderr: ?((chunk: string) => any)) {
     return new Promise((resolve, reject) => {

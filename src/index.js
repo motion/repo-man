@@ -23,12 +23,12 @@ class RepoMan {
   async get(path: string): Promise<number> {
     // clones the repo into projects dir
     const parsed = Helpers.parseSourceURI(path)
-    const projectRoot = this.context.getProjectRoot()
-    const projectRootPath = Helpers.processPath(projectRoot)
+    const projectsRoot = this.context.getProjectsRoot()
+    const projectsRootPath = Helpers.processPath(projectsRoot)
     const targetName = Helpers.getSuggestedDirectoryName(parsed.uri)
-    const targetDirectory = Path.join(projectRootPath, targetName)
+    const targetDirectory = Path.join(projectsRootPath, targetName)
 
-    await FS.mkdirp(projectRootPath)
+    await FS.mkdirp(projectsRootPath)
     if (await FS.exists(targetDirectory)) {
       throw new Helpers.RepoManError(`Directory ${targetName} already exists in Project root`)
     }
@@ -40,7 +40,7 @@ class RepoMan {
         this.context.log(chunk)
       }
     }
-    const cloneExitCode = await this.context.spawn('git', params, { cwd: projectRootPath }, logOutput, logOutput)
+    const cloneExitCode = await this.context.spawn('git', params, { cwd: projectsRootPath }, logOutput, logOutput)
     if (cloneExitCode !== 0) {
       return 1
     }
