@@ -4,33 +4,22 @@ export type Options = {
   stateDirectory: string,
 }
 
-export type CommandClass = {
-  name: string,
-  description: string,
-  run: Function,
+export type GitState = {
+  clean: boolean,
+  branchLocal: string,
+  branchRemote: string,
+  filesDirty: number,
+  filesUntracked: number,
 }
 
 export type Repository = {
   path: string,
-  ahead: number,
-  branch: string,
-  stashes: number,
-  files: Array<string>,
-  filesDirty: boolean,
-  filesUntracked: boolean,
-  localBranch: string,
-  remoteBranch: string,
-  remoteDiff: string,
-  isClean: boolean;
-}
-
-export type Package = {
-  version: string,
-}
+} & GitState
 
 export type Project = {
   name: string,
   path: string,
+  version: ?string,
   repository: Repository,
   dependencies: Array<string>,
   configurations: Array<string>,

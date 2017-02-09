@@ -25,7 +25,7 @@ export class RepoManError extends Error {
   }
 }
 
-export async function ensureDoesntExist(targetDirectory: string): void {
+export async function ensureDoesntExist(targetDirectory: string): Promise<void> {
   if (await FS.exists(targetDirectory)) {
     throw new RepoManError(`Directory ${targetDirectory} already exists in Project root`)
   }

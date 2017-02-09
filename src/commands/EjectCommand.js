@@ -1,7 +1,7 @@
 // @flow
 
-import Command from '../command'
 import Path from 'path'
+import Command from '../command'
 
 export default class EjectCommand extends Command {
   name = 'eject [source]'

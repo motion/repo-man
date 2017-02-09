@@ -7,7 +7,8 @@ import copy from 'sb-copy'
 import Context from './context'
 import Commands from './commands'
 import * as Helpers from './helpers'
-import type { Options, Command } from './types'
+import type Command from './command'
+import type { Options } from './types'
 
 const PRIVATE = {}
 

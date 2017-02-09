@@ -2,26 +2,28 @@
 
 import FS from 'sb-fs'
 import Path from 'path'
-import gitState2 from 'git-state'
-import promisify from 'sb-promisify'
 import ConfigFile from 'sb-config-file'
 import ChildProcess from 'child_process'
-import PackageInfo from 'package-info'
-import gitState from './helpers/gitState'
+import getPackageInfo from 'package-info'
+import gitStatus from './helpers/git-status'
 import * as Utils from './context-utils'
 
-const getPackageInfo = promisify(PackageInfo)
-const getGitState = promisify(gitState2.check)
-
 import * as Helpers from './helpers'
-import type { Options, Project, Repository, Package, Organization } from './types'
+import type { Options, Project, Repository, Organization } from './types'
 
 export default class Command {
+  name: string;
+  description: string;
+
   state: ConfigFile;
   config: ConfigFile;
   options: Options;
   utils: Utils;
   fs: FS;
+  // eslint-disable-next-line
+  run(...params: Array<any>) {
+    throw new Error('Command::run() is unimplemented')
+  }
   initialize(options: Options) {
     this.state = new ConfigFile(Path.join(options.stateDirectory, 'state.json'))
     this.config = new ConfigFile(Path.join(options.stateDirectory, 'config.json'))
@@ -88,39 +90,29 @@ export default class Command {
     return Object.assign(config.get(), {
       path,
       name,
+      version: await this.getPackageVersion(path),
       repository: await this.getRepositoryDetails(path),
-      package: await this.getPackageDetails(path),
     })
   }
   async getRepositoryDetails(path: string): Promise<Repository> {
-    const [state, state2] = await Promise.all([
-      gitState(path),
-      getGitState(path),
-    ])
     return {
       path,
-      localBranch: state.localBranch,
-      remoteBranch: state.remoteBranch,
-      remoteDiff: state.remoteDiff,
-      isClean: state.isClean,
-      files: state.files,
-      filesDirty: state2.dirty,
-      filesUntracked: state2.untracked,
-      ahead: state2.ahead,
+      ...await gitStatus(path),
     }
   }
-  async getPackageDetails(path: string): Promise<Package> {
+  async getPackageVersion(path: string): Promise<?string> {
+    const manifestPath = Path.join(path, 'package.json')
+    if (!await FS.exists(manifestPath)) {
+      return null
+    }
+    const manifest = (new ConfigFile(manifestPath)).get()
+    if (typeof manifest.name !== 'string') {
+      return null
+    }
     try {
-      const info = await getPackageInfo(path)
-      return {
-        version: info.version,
-      }
-    } catch (e) {
-      // no npm package
-    }
-    return {
-      version: null,
-    }
+      const remoteManifest = await new Promise(resolve => getPackageInfo(manifest.name, resolve))
+      return remoteManifest || null
+    } catch (_) { return null }
   }
   async spawn(name: string, parameters: Array<string>, options: Object, onStdout: ?((chunk: string) => any), onStderr: ?((chunk: string) => any)) {
     return new Promise((resolve, reject) => {
@@ -136,8 +128,12 @@ export default class Command {
     })
   }
 
-  log(text: string) {
-    console.log(text)
+  log(text: any) {
+    if (text && text.name === 'RepoManError') {
+      console.log('Error:', text.message)
+    } else {
+      console.log(text)
+    }
   }
   newline() {
     console.log('')
