@@ -26,7 +26,7 @@ export function parseGitStatus(output: string): GitState {
   }
 
   return {
-    clean: Boolean(filesDirty || filesUntracked),
+    clean: Boolean(!(filesDirty || filesUntracked)),
     branchLocal,
     branchRemote,
     filesDirty,
