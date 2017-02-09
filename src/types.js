@@ -4,12 +4,6 @@ export type Options = {
   stateDirectory: string,
 }
 
-export type CommandClass = {
-  name: string,
-  description: string,
-  run: Function,
-}
-
 export type Repository = {
   path: string,
   ahead: number,

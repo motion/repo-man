@@ -10,17 +10,24 @@ import PackageInfo from 'package-info'
 import gitState from './helpers/gitState'
 import * as Utils from './context-utils'
 
-const getPackageInfo = promisify(PackageInfo)
-const getGitState = promisify(gitState2.check)
-
 import * as Helpers from './helpers'
 import type { Options, Project, Repository, Package } from './types'
 
+const getPackageInfo = promisify(PackageInfo)
+const getGitState = promisify(gitState2.check)
+
 export default class Command {
+  name: string;
+  description: string;
+
   state: ConfigFile;
   config: ConfigFile;
   options: Options;
   utils: Utils;
+  // eslint-disable-next-line
+  run(...params: Array<any>) {
+    throw new Error('Command::run() is unimplemented')
+  }
   initialize(options: Options) {
     this.state = new ConfigFile(Path.join(options.stateDirectory, 'state.json'))
     this.config = new ConfigFile(Path.join(options.stateDirectory, 'config.json'))
@@ -113,7 +120,7 @@ export default class Command {
       // no npm package
     }
     return {
-      version: null,
+      version: '0.0.0',
     }
   }
   async spawn(name: string, parameters: Array<string>, options: Object, onStdout: ?((chunk: string) => any), onStderr: ?((chunk: string) => any)) {
@@ -130,7 +137,11 @@ export default class Command {
     })
   }
 
-  log(text: string) {
-    console.log(text)
+  log(text: any) {
+    if (text && text.name === 'RepoManError') {
+      console.log('Error:', text.message)
+    } else {
+      console.log(text)
+    }
   }
 }
