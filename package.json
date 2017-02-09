@@ -18,13 +18,17 @@
   },
   "dependencies": {
     "cli-table": "^0.3.1",
+    "cli-table2": "^0.2.0",
     "eslint-config-steelbrain": "^2.0.0",
     "expand-tilde": "^2.0.2",
+    "figures": "^2.0.0",
     "git-state": "^3.1.0",
+    "package-info": "^2.2.3",
     "process-bootstrap": "^1.0.0",
     "sb-command": "^1.0.0",
     "sb-config-file": "^1.1.0",
     "sb-copy": "^1.0.1",
+    "sb-exec": "^3.1.0",
     "sb-fs": "^1.1.1",
     "sb-promisify": "^2.0.1"
   }

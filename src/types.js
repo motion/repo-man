@@ -15,8 +15,17 @@ export type Repository = {
   ahead: number,
   branch: string,
   stashes: number,
+  files: Array<string>,
   filesDirty: boolean,
   filesUntracked: boolean,
+  localBranch: string,
+  remoteBranch: string,
+  remoteDiff: string,
+  isClean: boolean;
+}
+
+export type Package = {
+  version: string,
 }
 
 export type Project = {

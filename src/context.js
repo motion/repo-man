@@ -3,26 +3,32 @@
 import FS from 'sb-fs'
 import Path from 'path'
 import invariant from 'assert'
-import gitState from 'git-state'
+import gitState2 from 'git-state'
 import promisify from 'sb-promisify'
 import ConfigFile from 'sb-config-file'
 import ChildProcess from 'child_process'
+import PackageInfo from 'package-info'
+import gitState from './helpers/gitState'
+import * as Utils from './context-utils'
+
+const getPackageInfo = promisify(PackageInfo)
+const getGitState = promisify(gitState2.check)
 
 import * as Helpers from './helpers'
-import type { Options, Command, Project, Repository } from './types'
-
-const getGitState = promisify(gitState.check)
+import type { Options, Command, Project, Repository, Package } from './types'
 
 export default class Context {
   state: ConfigFile;
   config: ConfigFile;
   options: Options;
   commands: Array<Command>;
+  utils: Utils;
   constructor(options: Options) {
     this.state = new ConfigFile(Path.join(options.stateDirectory, 'state.json'))
     this.config = new ConfigFile(Path.join(options.stateDirectory, 'config.json'))
     this.options = options
     this.commands = []
+    this.utils = Utils
   }
   getProjectsRoot(): string {
     return Helpers.processPath(this.config.get('projectsRoot'))
@@ -78,17 +84,29 @@ export default class Context {
       path,
       name,
       repository: await this.getRepositoryDetails(path),
+      package: await this.getPackageDetails(path),
     })
   }
   async getRepositoryDetails(path: string): Promise<Repository> {
-    const state = await getGitState(path)
+    const [state, state2] = await Promise.all([
+      gitState(path),
+      getGitState(path),
+    ])
     return {
       path,
-      ahead: state.ahead,
-      branch: state.branch,
-      stashes: state.stashes,
-      filesDirty: state.dirty,
-      filesUntracked: state.untracked,
+      localBranch: state.localBranch,
+      remoteBranch: state.remoteBranch,
+      remoteDiff: state.remoteDiff,
+      isClean: state.isClean,
+      files: state.files,
+      filesDirty: state2.dirty,
+      ahead: state2.ahead,
+    }
+  }
+  async getPackageDetails(path: string): Promise<Package> {
+    const info = await getPackageInfo(path)
+    return {
+      version: info.version,
     }
   }
   async spawn(name: string, parameters: Array<string>, options: Object, onStdout: ?((chunk: string) => any), onStderr: ?((chunk: string) => any)) {
