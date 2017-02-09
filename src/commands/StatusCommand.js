@@ -27,7 +27,7 @@ export default class StatusCommand extends Command {
       return [
         `${DIRTY_FLAG} ${project.name}`,
         repo.filesDirty + repo.filesUntracked,
-        `${Color.yellow(repo.localBranch)} ${gray(Figure.arrowRight)} ${repo.remoteBranch}`,
+        `${Color.yellow(repo.branchLocal)} ${gray(Figure.arrowRight)} ${repo.branchRemote}`,
         project.package.version || gray('-none-'),
         gray(project.path),
       ]

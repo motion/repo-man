@@ -2,19 +2,17 @@
 
 import FS from 'sb-fs'
 import Path from 'path'
-import gitState2 from 'git-state'
 import promisify from 'sb-promisify'
 import ConfigFile from 'sb-config-file'
 import ChildProcess from 'child_process'
 import PackageInfo from 'package-info'
-import gitState from './helpers/gitState'
+import gitStatus from './helpers/git-status'
 import * as Utils from './context-utils'
 
 import * as Helpers from './helpers'
 import type { Options, Project, Repository, Package } from './types'
 
 const getPackageInfo = promisify(PackageInfo)
-const getGitState = promisify(gitState2.check)
 
 export default class Command {
   name: string;
@@ -94,20 +92,10 @@ export default class Command {
     })
   }
   async getRepositoryDetails(path: string): Promise<Repository> {
-    const [state, state2] = await Promise.all([
-      gitState(path),
-      getGitState(path),
-    ])
+    const status = await gitStatus(path)
     return {
       path,
-      localBranch: state.localBranch,
-      remoteBranch: state.remoteBranch,
-      remoteDiff: state.remoteDiff,
-      isClean: state.isClean,
-      files: state.files,
-      filesDirty: state2.dirty,
-      filesUntracked: state2.untracked,
-      ahead: state2.ahead,
+      ...status,
     }
   }
   async getPackageDetails(path: string): Promise<Package> {

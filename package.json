@@ -22,7 +22,6 @@
     "eslint-config-steelbrain": "^2.0.0",
     "expand-tilde": "^2.0.2",
     "figures": "^2.0.0",
-    "git-state": "^3.1.0",
     "inquirer": "^3.0.1",
     "package-info": "^2.2.3",
     "process-bootstrap": "^1.0.0",

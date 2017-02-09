@@ -4,19 +4,17 @@ export type Options = {
   stateDirectory: string,
 }
 
+export type GitState = {
+  clean: boolean,
+  branchLocal: string,
+  branchRemote: string,
+  filesDirty: number,
+  filesUntracked: number,
+}
+
 export type Repository = {
   path: string,
-  ahead: number,
-  branch: string,
-  stashes: number,
-  files: Array<string>,
-  filesDirty: boolean,
-  filesUntracked: boolean,
-  localBranch: string,
-  remoteBranch: string,
-  remoteDiff: string,
-  isClean: boolean;
-}
+} & GitState
 
 export type Package = {
   version: string,
