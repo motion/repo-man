@@ -19,11 +19,11 @@ class RepoMan {
       throw new Error('Invalid invocation of new RepoMan() use RepoMan.create() instead')
     }
     this.options = options
-    this.context = new Context(options)
-
-    this.context.addCommand(Commands.get.name, Commands.get.description, Commands.get.callback)
-    this.context.addCommand(Commands.status.name, Commands.status.description, Commands.status.callback)
-    this.context.addCommand(Commands.install.name, Commands.install.description, Commands.install.callback)
+    this.context = new Context()
+    this.context.addCommand(Commands.Get, options)
+    this.context.addCommand(Commands.Status, options)
+    this.context.addCommand(Commands.Install, options)
+    this.context.addCommand(Commands.Eject, options)
   }
   getCommands(): Array<Command> {
     return this.context.getCommands()

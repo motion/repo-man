@@ -28,9 +28,10 @@ RepoMan.get().then(function(repoMan) {
     .description('Repository management tool')
 
   const commands = repoMan.getCommands()
+
   const registerCommand = (c) => {
     const prefix = !isBuiltinCommand(c.name) ? 'run.' : ''
-    command.command(`${prefix}${c.name}`, c.description, c.callback)
+    command.command(`${prefix}${c.name}`, c.description, c.run)
   }
 
   // First register builtin commands
@@ -41,6 +42,7 @@ RepoMan.get().then(function(repoMan) {
 
   // Run it
   const processed = command.parse(process.argv, true)
+
   if (processed.errorMessage) {
     console.log('Error:', processed.errorMessage)
   }

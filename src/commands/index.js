@@ -1,11 +1,13 @@
 // @flow
 
-import * as get from './get'
-import * as status from './status'
-import * as install from './install'
+import Get from './GetCommand'
+import Status from './StatusCommand'
+import Install from './InstallCommand'
+import Eject from './EjectCommand'
 
 export default {
-  get,
-  status,
-  install,
+  Get,
+  Status,
+  Install,
+  Eject,
 }
