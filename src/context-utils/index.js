@@ -1,3 +1,4 @@
-export figures from './figures'
+export Figure from './figures'
 export Table from './table'
-export symbols from './symbols'
+export Symbol from './symbols'
+export Color from 'cli-color'

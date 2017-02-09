@@ -16,7 +16,7 @@ const DEFAULT_STYLE = {
     'mid-mid': '',
     right: '',
     'right-mid': '',
-    middle: ' ',
+    middle: '   ',
   },
   style: {
     'padding-left': 0,
@@ -25,8 +25,8 @@ const DEFAULT_STYLE = {
 }
 
 export default class Table {
-  constructor(style = DEFAULT_STYLE) {
-    this.table = new CLITable(style)
+  constructor(options) {
+    this.table = new CLITable({ ...DEFAULT_STYLE, ...options })
   }
 
   push(...args) {

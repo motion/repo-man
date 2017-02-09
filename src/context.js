@@ -100,13 +100,21 @@ export default class Context {
       isClean: state.isClean,
       files: state.files,
       filesDirty: state2.dirty,
+      filesUntracked: state2.untracked,
       ahead: state2.ahead,
     }
   }
   async getPackageDetails(path: string): Promise<Package> {
-    const info = await getPackageInfo(path)
+    try {
+      const info = await getPackageInfo(path)
+      return {
+        version: info.version,
+      }
+    } catch (e) {
+      // no npm package
+    }
     return {
-      version: info.version,
+      version: null,
     }
   }
   async spawn(name: string, parameters: Array<string>, options: Object, onStdout: ?((chunk: string) => any), onStderr: ?((chunk: string) => any)) {

@@ -5,19 +5,21 @@ export const description = 'Get status of your projects'
 export async function callback() {
   const projectPaths = await this.getProjects()
   const projects = await Promise.all(projectPaths.map(entry => this.getProjectDetails(entry)))
+  const { Table, Color, Figure, Symbol } = this.utils
 
-  console.log(projects)
-
-  const table = new this.utils.Table({
-    head: ['name', 'path', 'branch', 'changes'],
-  })
+  const head = ['project', 'changes', `local ${Figure.arrowRight} remote`, 'npm', 'path'].map(c => Color.cyan(c))
+  const table = new Table({ head })
 
   table.push(...projects.map(function(project) {
+    const repo = project.repository
+    const DIRTY_FLAG = repo.clean ? Symbol.check : Symbol.x
+
     return [
-      project.name,
-      project.path,
-      project.repository.branch,
-      project.repository.filesDirty + project.repository.filesUntracked,
+      `${DIRTY_FLAG} ${project.name}`,
+      repo.filesDirty + repo.filesUntracked,
+      `${Color.yellow(repo.localBranch)} ${Figure.arrowRight} ${repo.remoteBranch}`,
+      project.package.version || '-none-',
+      Color.xterm(8)(project.path),
     ]
   }))
 
