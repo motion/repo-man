@@ -3,8 +3,9 @@
 import invariant from 'assert'
 import expandTilde from 'expand-tilde'
 
-import type { Options } from '../types'
+import type { Options } from './types'
 
+export const CONFIG_FILE_NAME = '.repoman.json'
 export const BUILTIN_COMMANDS = new Set(['get', 'status', 'exec', 'bootstrap', 'publish'])
 export class RepoManError extends Error {
   constructor(message: string) {

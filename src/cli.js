@@ -17,6 +17,9 @@ function handleError(error) {
   }
   process.exit(1)
 }
+function isBuiltinCommand(entry: string) {
+  return BUILTIN_COMMANDS.has(entry.split(' ')[0])
+}
 
 RepoMan.get().then(function(repoMan) {
   // Basic setup
@@ -26,25 +29,26 @@ RepoMan.get().then(function(repoMan) {
 
   const commands = repoMan.getCommands()
   const registerCommand = (c) => {
-    const prefix = BUILTIN_COMMANDS.has(c.name) ? 'run.' : ''
+    const prefix = !isBuiltinCommand(c.name) ? 'run.' : ''
     command.command(`${prefix}${c.name}`, c.description, c.callback)
   }
+  const defaultCallback = () => console.log('Welcome to RepoMan. Use --help to get list of available commands')
 
   // First register builtin commands
-  commands.filter(c => BUILTIN_COMMANDS.has(c.name)).forEach(registerCommand)
+  commands.filter(c => isBuiltinCommand(c.name)).forEach(registerCommand)
 
   // Then register non-builtin commands
-  commands.filter(c => !BUILTIN_COMMANDS.has(c.name)).forEach(registerCommand)
+  commands.filter(c => !isBuiltinCommand(c.name)).forEach(registerCommand)
 
   // Default stuff
-  command.default(function() { console.log('Welcome to RepoMan. Use --help to get list of available commands') })
+  command.default(defaultCallback)
 
   // Run it
   const processed = command.parse(process.argv, true)
   if (processed.errorMessage) {
     console.log('Error:', processed.errorMessage)
   }
-  if (processed.errorMessage || processed.options.help || !processed.callback) {
+  if (processed.errorMessage || processed.options.help || !processed.callback || (processed.parameters.length && processed.callback === defaultCallback)) {
     command.showHelp('repoman')
     return null
   }

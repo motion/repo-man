@@ -6,8 +6,8 @@ import invariant from 'assert'
 import ConfigFile from 'sb-config-file'
 import ChildProcess from 'child_process'
 
-import * as Helpers from '../helpers'
-import type { Options, Command } from '../types'
+import * as Helpers from './helpers'
+import type { Options, Command, Project } from './types'
 
 export default class Context {
   state: ConfigFile;
@@ -36,6 +36,15 @@ export default class Context {
       return true
     }))
     return projects
+  }
+  async getProjectDetails(path: string): Promise<Project> {
+    const config = new ConfigFile(Path.join(path, Helpers.CONFIG_FILE_NAME), {
+      name: 'Untitled',
+      path,
+      dependencies: [],
+      configurations: [],
+    })
+    return config.get()
   }
   async spawn(name: string, parameters: Array<string>, options: Object, onStdout: ?((chunk: string) => any), onStderr: ?((chunk: string) => any)) {
     return new Promise((resolve, reject) => {

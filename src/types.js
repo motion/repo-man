@@ -9,3 +9,10 @@ export type Command = {
   callback: Function,
   description: string,
 }
+
+export type Project = {
+  name: string,
+  path: string,
+  dependencies: Array<string>,
+  configurations: Array<string>,
+}
