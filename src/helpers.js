@@ -9,6 +9,7 @@ export const CONFIG_FILE_NAME = '.repoman.json'
 
 export const BUILTIN_COMMANDS = new Set([
   'get',
+  'get-config',
   'status',
   'install',
   'exec',
