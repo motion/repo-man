@@ -3,11 +3,15 @@
 import FS from 'sb-fs'
 import Path from 'path'
 import invariant from 'assert'
+import gitState from 'git-state'
+import promisify from 'sb-promisify'
 import ConfigFile from 'sb-config-file'
 import ChildProcess from 'child_process'
 
 import * as Helpers from './helpers'
-import type { Options, Command, Project } from './types'
+import type { Options, Command, Project, Repository } from './types'
+
+const getGitState = promisify(gitState.check)
 
 export default class Context {
   state: ConfigFile;
@@ -43,8 +47,20 @@ export default class Context {
       path,
       dependencies: [],
       configurations: [],
+      repository: await this.getRepositoryDetails(path),
     })
     return config.get()
+  }
+  async getRepositoryDetails(path: string): Promise<Repository> {
+    const state = await getGitState(path)
+    return {
+      path,
+      ahead: state.ahead,
+      branch: state.branch,
+      stashes: state.stashes,
+      filesDirty: state.dirty,
+      filesUntracked: state.untracked,
+    }
   }
   async spawn(name: string, parameters: Array<string>, options: Object, onStdout: ?((chunk: string) => any), onStderr: ?((chunk: string) => any)) {
     return new Promise((resolve, reject) => {
