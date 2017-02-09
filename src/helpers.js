@@ -11,7 +11,7 @@ export const BUILTIN_COMMANDS = new Set([
   'get',
   'get-config',
   'status',
-  'install',
+  'sync',
   'exec',
   'bootstrap',
   'publish',

@@ -68,9 +68,24 @@ export default class Command {
     }))
     return organizations
   }
-  async getProjects(): Promise<Array<string>> {
-    const projects = []
+  async getOrganization(name: string): Promise<Organization> {
     const organizations = await this.getOrganizations()
+    const index = organizations.findIndex(org => this.lastFolder(org.path) === name)
+    if (index === -1) {
+      this.error(`No organization found: ${name}`)
+    }
+    return organizations[index]
+  }
+  async getProjects(orgName?: string): Promise<Array<string>> {
+    const projects = []
+    let organizations = []
+    // allow finding for specific organization
+    if (orgName) {
+      organizations = [await this.getOrganization(orgName)]
+    }
+    else {
+      organizations = await this.getOrganizations()
+    }
     await Promise.all(organizations.map(async function({ path }) {
       const items = await FS.readdir(path)
       for (const item of items) {
@@ -133,6 +148,10 @@ export default class Command {
       spawned.on('close', resolve)
       spawned.on('error', reject)
     })
+  }
+  lastFolder(path: string) {
+    const list = path.split(Path.sep)
+    return list[list.length - 1]
   }
 
   log(text: any) {

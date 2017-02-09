@@ -6,21 +6,34 @@ import copy from 'sb-copy'
 import Command from '../command'
 import { parseSourceURI, RepoManError } from '../helpers'
 
-export default class InstallCommand extends Command {
-  name = 'install'
-  description = 'Install current project dependencies'
+export default class SyncCommand extends Command {
+  name = 'sync [org]'
+  description = 'Sync configuration for projects, defaults to just current folder'
 
-  async run() {
-    const currentProjectPath = await this.getCurrentProjectPath()
-    if (!currentProjectPath) {
-      throw new RepoManError('Current directory is not a Repoman project')
+  async run(_: Object, orgName: string) {
+    if (!orgName) {
+      // current folder
+      const currentProjectPath = await this.getCurrentProjectPath()
+      if (!currentProjectPath) {
+        throw new RepoManError('Current directory is not a Repoman project')
+      }
+      this.syncRepo(currentProjectPath)
+    } else {
+      // for entire organization
+      const projects = await this.getProjects(orgName)
+      projects.forEach((projectPath) => {
+        this.syncRepo(projectPath)
+      })
     }
+  }
+
+  async syncRepo(projectPath: string) {
     const log = chunk => this.log(chunk.toString().trim())
     const projectsRoot = await this.getProjectsRoot()
 
     // Dependencies
     const dependencies = []
-    const currentProject = await this.getProjectDetails(currentProjectPath)
+    const currentProject = await this.getProjectDetails(projectPath)
     for (const entry of currentProject.dependencies) {
       try {
         const parsed = parseSourceURI(entry)
@@ -53,7 +66,7 @@ export default class InstallCommand extends Command {
           await this.spawn(process.execPath, [process.argv[1] || require.resolve('../../cli'), 'get-config', entry], {}, log, log)
         }
         // NOTE: We do not overwrite in install, we overwrite in update
-        await copy(entryPath, currentProjectPath, {
+        await copy(entryPath, projectPath, {
           dotFiles: true,
           overwrite: false,
           failIfExists: false,
@@ -65,9 +78,9 @@ export default class InstallCommand extends Command {
     }
 
     if (process.exitCode === 1) {
-      this.log(new RepoManError('Unable to install project dependencies'))
+      this.log(new RepoManError('Unable to sync project dependencies'))
     } else {
-      this.log('Successfully installed project dependencies')
+      this.log(`Synced project dependencies: ${projectPath}`)
     }
   }
 }

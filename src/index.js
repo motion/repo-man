@@ -24,7 +24,7 @@ class RepoMan {
     this.addCommand(Commands.Get, options)
     this.addCommand(Commands.GetConfig, options)
     this.addCommand(Commands.Status, options)
-    this.addCommand(Commands.Install, options)
+    this.addCommand(Commands.Sync, options)
     this.addCommand(Commands.Eject, options)
   }
   getCommands(): Array<Command> {

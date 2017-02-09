@@ -3,13 +3,13 @@
 import Get from './GetCommand'
 import GetConfig from './GetConfigCommand'
 import Status from './StatusCommand'
-import Install from './InstallCommand'
+import Sync from './SyncCommand'
 import Eject from './EjectCommand'
 
 export default {
   Get,
   GetConfig,
   Status,
-  Install,
+  Sync,
   Eject,
 }
