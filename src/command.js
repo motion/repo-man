@@ -34,9 +34,8 @@ export default class Command {
   getProjectsRoot(): string {
     return Helpers.processPath(this.config.get('projectsRoot'))
   }
-  async ensureProjectsRoot(): void {
-    const projectsRoot = this.getProjectsRoot()
-    await FS.mkdirp(projectsRoot)
+  async ensureProjectsRoot(): Promise<void> {
+    await FS.mkdirp(this.getProjectsRoot())
   }
   async getCurrentProjectPath(): Promise<?string> {
     const currentDirectory = process.cwd()

@@ -3,7 +3,7 @@
 import FS from 'sb-fs'
 import Path from 'path'
 import Command from '../command'
-import { parseSourceURI, ensureDoesntExist } from '../helpers'
+import { parseSourceURI, RepoManError } from '../helpers'
 
 export default class GetCommand extends Command {
   name = 'get <remote_path>'
@@ -17,7 +17,9 @@ export default class GetCommand extends Command {
     const targetDirectory = Path.join(projectsRoot, parsed.username, parsed.repository)
 
     await FS.mkdirp(projectsRoot)
-    await ensureDoesntExist(targetDirectory)
+    if (await FS.exists(targetDirectory)) {
+      throw new RepoManError(`Directory ${targetDirectory} already exists in Project root`)
+    }
 
     const params = ['clone', `git@github.com:${targetName}`, targetDirectory]
     const logOutput = (givenChunk) => {

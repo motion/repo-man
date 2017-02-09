@@ -2,7 +2,6 @@
 
 import invariant from 'assert'
 import expandTilde from 'expand-tilde'
-import FS from 'sb-fs'
 
 import type { Options } from './types'
 
@@ -22,12 +21,6 @@ export class RepoManError extends Error {
   constructor(message: string) {
     super(message)
     this.name = 'RepoManError'
-  }
-}
-
-export async function ensureDoesntExist(targetDirectory: string): Promise<void> {
-  if (await FS.exists(targetDirectory)) {
-    throw new RepoManError(`Directory ${targetDirectory} already exists in Project root`)
   }
 }
 
