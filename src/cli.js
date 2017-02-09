@@ -32,7 +32,7 @@ RepoMan.get().then(function(repoMan) {
     const prefix = !isBuiltinCommand(c.name) ? 'run.' : ''
     command.command(`${prefix}${c.name}`, c.description, c.callback)
   }
-  const defaultCallback = () => console.log('Welcome to RepoMan. Use --help to get list of available commands')
+  const defaultCallback = () => command.showHelp('repoman')
 
   // First register builtin commands
   commands.filter(c => isBuiltinCommand(c.name)).forEach(registerCommand)
