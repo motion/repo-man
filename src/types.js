@@ -24,3 +24,8 @@ export type Project = {
   dependencies: Array<string>,
   configurations: Array<string>,
 }
+
+export type Organization = {
+  name: string,
+  path: string,
+}

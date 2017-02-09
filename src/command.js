@@ -9,7 +9,7 @@ import gitStatus from './helpers/git-status'
 import * as Utils from './context-utils'
 
 import * as Helpers from './helpers'
-import type { Options, Project, Repository } from './types'
+import type { Options, Project, Repository, Organization } from './types'
 
 export default class Command {
   name: string;
@@ -19,6 +19,7 @@ export default class Command {
   config: ConfigFile;
   options: Options;
   utils: Utils;
+  fs: FS;
   // eslint-disable-next-line
   run(...params: Array<any>) {
     throw new Error('Command::run() is unimplemented')
@@ -28,9 +29,14 @@ export default class Command {
     this.config = new ConfigFile(Path.join(options.stateDirectory, 'config.json'))
     this.options = options
     this.utils = Utils
+    this.fs = FS
   }
   getProjectsRoot(): string {
     return Helpers.processPath(this.config.get('projectsRoot'))
+  }
+  async ensureProjectsRoot(): void {
+    const projectsRoot = this.getProjectsRoot()
+    await FS.mkdirp(projectsRoot)
   }
   async getCurrentProjectPath(): Promise<?string> {
     const currentDirectory = process.cwd()
@@ -45,7 +51,7 @@ export default class Command {
     }
     return Path.join(projectsRoot, chunks[0], chunks[1])
   }
-  async getOrganizations(): Promise<Array<string>> {
+  async getOrganizations(): Promise<Array<Organization>> {
     const organizations = []
     const projectsRoot = this.getProjectsRoot()
     const entries = await FS.readdir(projectsRoot)
@@ -53,7 +59,7 @@ export default class Command {
       const path = Path.join(projectsRoot, entry)
       const stat = await FS.lstat(path)
       if (stat.isDirectory()) {
-        organizations.push(path)
+        organizations.push({ name: entry, path })
       }
       return true
     }))
@@ -62,10 +68,10 @@ export default class Command {
   async getProjects(): Promise<Array<string>> {
     const projects = []
     const organizations = await this.getOrganizations()
-    await Promise.all(organizations.map(async function(orgPath) {
-      const items = await FS.readdir(orgPath)
+    await Promise.all(organizations.map(async function({ path }) {
+      const items = await FS.readdir(path)
       for (const item of items) {
-        const itemPath = Path.join(orgPath, item)
+        const itemPath = Path.join(path, item)
         const stat = await FS.lstat(itemPath)
         if (stat.isDirectory()) {
           projects.push(itemPath)
@@ -128,5 +134,11 @@ export default class Command {
     } else {
       console.log(text)
     }
+  }
+  newline() {
+    console.log('')
+  }
+  error(value: string) {
+    throw new Helpers.RepoManError(value)
   }
 }
