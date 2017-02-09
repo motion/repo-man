@@ -1,9 +1,8 @@
 // @flow
 
-import FS from 'sb-fs'
 import Path from 'path'
 import Command from '../command'
-import { parseSourceURI, RepoManError } from '../helpers'
+import { parseSourceURI } from '../helpers'
 
 export default class GetCommand extends Command {
   name = 'get <remote_path>'
@@ -16,9 +15,9 @@ export default class GetCommand extends Command {
     const targetName = Path.join(parsed.username, parsed.repository)
     const targetDirectory = Path.join(projectsRoot, parsed.username, parsed.repository)
 
-    await FS.mkdirp(projectsRoot)
-    if (await FS.exists(targetDirectory)) {
-      throw new RepoManError(`Directory ${targetDirectory} already exists in Project root`)
+    await this.fs.mkdirp(projectsRoot)
+    if (await this.fs.exists(targetDirectory)) {
+      this.error(`Directory ${targetDirectory} already exists in Project root`)
     }
 
     const params = ['clone', `git@github.com:${targetName}`, targetDirectory]
