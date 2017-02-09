@@ -15,10 +15,10 @@ export default class Command {
   name: string;
   description: string;
 
+  utils: Utils;
   state: ConfigFile;
   config: ConfigFile;
   options: Options;
-  utils: Utils;
   constructor(options: Options) {
     this.state = new ConfigFile(Path.join(options.stateDirectory, 'state.json'))
     this.config = new ConfigFile(Path.join(options.stateDirectory, 'config.json'))
