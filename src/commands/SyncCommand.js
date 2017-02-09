@@ -11,23 +11,27 @@ export default class SyncCommand extends Command {
   description = 'Sync configuration for projects, defaults to just current folder'
 
   async run(_: Object, orgName: string) {
+    // until we get flags, lets just prompt
+    const answer = await this.utils.prompt('Overwrite files on conflict?', ['no', 'yes'])
+    const overwrite = answer === 'yes'
+
     if (!orgName) {
       // current folder
       const currentProjectPath = await this.getCurrentProjectPath()
       if (!currentProjectPath) {
         throw new RepoManError('Current directory is not a Repoman project')
       }
-      this.syncRepo(currentProjectPath)
+      this.syncRepo(currentProjectPath, overwrite)
     } else {
       // for entire organization
       const projects = await this.getProjects(orgName)
       projects.forEach((projectPath) => {
-        this.syncRepo(projectPath)
+        this.syncRepo(projectPath, overwrite)
       })
     }
   }
 
-  async syncRepo(projectPath: string) {
+  async syncRepo(projectPath: string, overwrite: boolean) {
     const log = chunk => this.log(chunk.toString().trim())
     const projectsRoot = await this.getProjectsRoot()
 
@@ -68,8 +72,8 @@ export default class SyncCommand extends Command {
         // NOTE: We do not overwrite in install, we overwrite in update
         await copy(entryPath, projectPath, {
           dotFiles: true,
-          overwrite: false,
-          failIfExists: false,
+          overwrite,
+          failIfExists: !overwrite,
         })
       } catch (error) {
         this.log(error)
