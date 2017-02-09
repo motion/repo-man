@@ -1,5 +1,6 @@
 // @flow
 
+import FS from 'sb-fs'
 import Path from 'path'
 import Command from '../command'
 
@@ -29,13 +30,13 @@ export default class EjectCommand extends Command {
     const org = orgs[orgs.findIndex(x => x.path === answer)]
     const targetDir = Path.join(org.path, sourceName)
 
-    if (await this.fs.exists(targetDir)) {
+    if (await FS.exists(targetDir)) {
       this.error(`Already exists! ${tildify(targetDir)}`)
     }
 
     this.log(`Ejecting to ${Color.white(targetDir)}\n`)
 
-    await this.fs.rename(sourceDir, targetDir)
+    await FS.rename(sourceDir, targetDir)
 
     this.log(`Successfully ejected '${tildify(sourceDir)}' to '${tildify(targetDir)}'`)
   }

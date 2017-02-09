@@ -19,13 +19,11 @@ export default class Command {
   config: ConfigFile;
   options: Options;
   utils: Utils;
-  fs: FS;
   constructor(options: Options) {
     this.state = new ConfigFile(Path.join(options.stateDirectory, 'state.json'))
     this.config = new ConfigFile(Path.join(options.stateDirectory, 'config.json'))
     this.options = options
     this.utils = Utils
-    this.fs = FS
 
     // $FlowIgnore: Dirty patch but required
     this.run = this.run.bind(this)
