@@ -37,6 +37,9 @@ export default class Command {
   getProjectsRoot(): string {
     return Helpers.processPath(this.config.get('projectsRoot'))
   }
+  getConfigsRoot(): string {
+    return Path.join(this.getProjectsRoot(), 'configs')
+  }
   async ensureProjectsRoot(): Promise<void> {
     await FS.mkdirp(this.getProjectsRoot())
   }
@@ -60,7 +63,7 @@ export default class Command {
     await Promise.all(entries.map(async function(entry) {
       const path = Path.join(projectsRoot, entry)
       const stat = await FS.lstat(path)
-      if (stat.isDirectory()) {
+      if (stat.isDirectory() && entry !== 'configs') {
         organizations.push({ name: entry, path })
       }
       return true

@@ -22,6 +22,7 @@ class RepoMan {
     this.options = options
     this.commands = []
     this.addCommand(Commands.Get, options)
+    this.addCommand(Commands.GetConfig, options)
     this.addCommand(Commands.Status, options)
     this.addCommand(Commands.Install, options)
     this.addCommand(Commands.Eject, options)
