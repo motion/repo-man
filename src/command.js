@@ -97,9 +97,13 @@ export default class Command {
     })
   }
   async getRepositoryDetails(path: string): Promise<Repository> {
-    return {
-      path,
-      ...await gitStatus(path),
+    try {
+      return {
+        path,
+        ...await gitStatus(path),
+      }
+    } catch (e) {
+      return { path }
     }
   }
   async getPackageVersion(path: string): Promise<?string> {

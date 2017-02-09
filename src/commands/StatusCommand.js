@@ -23,14 +23,31 @@ export default class StatusCommand extends Command {
 
     table.push(...projects.map(function(project) {
       const repo = project.repository
-      const DIRTY_FLAG = repo.clean ? Symbol.check : Symbol.x
-      return [
-        `${DIRTY_FLAG} ${project.name}`,
-        repo.filesDirty + repo.filesUntracked,
-        `${Color.yellow(repo.branchLocal)} ${gray(Figure.arrowRight)} ${repo.branchRemote}`,
-        project.version || gray('-none-'),
-        gray(project.path),
-      ]
+      const isGit = typeof repo.clean !== 'undefined'
+      const none = gray('-none-')
+      const version = project.version || none
+      const path = gray(project.path)
+
+      if (isGit) {
+        const isDirty = repo.clean ? Symbol.check : Symbol.x
+        const numChanged = repo.filesDirty + repo.filesUntracked
+        return [
+          `${isDirty} ${project.name}`,
+          numChanged,
+          `${Color.yellow(repo.branchLocal)} ${gray(Figure.arrowRight)} ${repo.branchRemote}`,
+          version,
+          path,
+        ]
+      }
+      else {
+        return [
+          `  ${project.name}`,
+          none,
+          none,
+          version,
+          path,
+        ]
+      }
     }))
 
     this.log(table.print())
