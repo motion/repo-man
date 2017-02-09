@@ -17,7 +17,6 @@
     "flow-bin": "^0.38.0"
   },
   "dependencies": {
-    "cli-table": "^0.3.1",
     "cli-table2": "^0.2.0",
     "eslint-config-steelbrain": "^2.0.0",
     "expand-tilde": "^2.0.2",
