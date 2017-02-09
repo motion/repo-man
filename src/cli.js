@@ -32,7 +32,6 @@ RepoMan.get().then(function(repoMan) {
     const prefix = !isBuiltinCommand(c.name) ? 'run.' : ''
     command.command(`${prefix}${c.name}`, c.description, c.callback)
   }
-  const defaultCallback = () => command.showHelp('repoman')
 
   // First register builtin commands
   commands.filter(c => isBuiltinCommand(c.name)).forEach(registerCommand)
@@ -40,16 +39,16 @@ RepoMan.get().then(function(repoMan) {
   // Then register non-builtin commands
   commands.filter(c => !isBuiltinCommand(c.name)).forEach(registerCommand)
 
-  // Default stuff
-  command.default(defaultCallback)
-
   // Run it
   const processed = command.parse(process.argv, true)
   if (processed.errorMessage) {
     console.log('Error:', processed.errorMessage)
   }
-  if (processed.errorMessage || processed.options.help || !processed.callback || (processed.parameters.length && processed.callback === defaultCallback)) {
+  if (processed.errorMessage || processed.options.help || !processed.callback) {
     command.showHelp('repoman')
+    if (!processed.options.help) {
+      process.exitCode = 1
+    }
     return null
   }
   return processed.callback(processed.options, ...processed.parameters)
