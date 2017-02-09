@@ -2,51 +2,20 @@
 
 import { RepoManError } from '../../helpers'
 
-// TODO(steelbrain): Make this url parser a separate module
-const REGEX_URI_SCHEME_1 = /^([0-9a-z-_]+\/[0-9a-z-_]+)(#[a-f0-9]+)?$/i
-// ^ username/repo username/repo#commit
-const REGEX_URI_SCHEME_2 = /^([^:\/\/]+):\/\/([^.]+\.[^:]+(\/|:)[^\/]+\/.+)(#.+)?$/
-// ^ https://github.com/username/repo git://github.com:username/repo#commit
-const REGEX_URI_SCHEME_3 = /^([^.\/]+\.[^:]+(:|\/)[^\/]+\/.+)(#.+)?$/
-// ^ github.com:username/repo github.com/username/repo#commit
-export function parseSourceURI(given: string): { uri: string, tag: ?string } {
-  let uri = ''
+const REGEX_URI_SCHEME = /^([0-9a-z-_]+)\/([0-9a-z-_]+)(#[a-f0-9]+)?$/i
+export function parseSourceURI(given: string): { username: string, repository: string, tag: ?string } {
+  if (!REGEX_URI_SCHEME.test(given)) {
+    throw new RepoManError(`Invalid source provided '${given}', supported syntax is username/repository#tag`)
+  }
   let tag = null
-  let protocol = ''
-  if (REGEX_URI_SCHEME_1.test(given)) {
-    const matched = REGEX_URI_SCHEME_1.exec(given)
-    uri = `github.com:${matched[1]}`
-    protocol = 'git:'
-    if (matched[2]) {
-      // Remove the hash in front
-      tag = matched[2].slice(1)
-    }
-  } else if (REGEX_URI_SCHEME_2.test(given)) {
-    const matched = REGEX_URI_SCHEME_2.exec(given)
-    uri = matched[2]
-    protocol = matched[1] + ':'
-    if (matched[4]) {
-      // Remove the hash
-      tag = matched[4].slice(1)
-    }
-  } else if (REGEX_URI_SCHEME_3.test(given)) {
-    const matched = REGEX_URI_SCHEME_3.exec(given)
-    uri = matched[1]
-    protocol = 'git:'
-    if (matched[3]) {
-      // Remove the hash in front
-      tag = matched[3].slice(1)
-    }
-  } else {
-    throw new RepoManError(`Invalid source provided '${given}'`)
+  const matched = REGEX_URI_SCHEME.exec(given)
+  const username = matched[1]
+  const repository = matched[2]
+  if (matched[3]) {
+    // Remove the hash in front
+    tag = matched[3].slice(1)
   }
-  let filledURI
-  if (protocol === 'git:') {
-    filledURI = `git@${uri}`
-  } else {
-    filledURI = `${protocol}//${uri}`
-  }
-  return { uri: filledURI, tag }
+  return { username, repository, tag }
 }
 
 export function getSuggestedDirectoryName(uri: string): string {

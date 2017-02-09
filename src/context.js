@@ -28,16 +28,30 @@ export default class Context {
     return Helpers.processPath(this.config.get('projectsRoot'))
   }
   async getProjects(): Promise<Array<string>> {
-    const projectsRoot = this.getProjectsRoot()
-    const entries = await FS.readdir(projectsRoot)
     const projects = []
+    const organizations = []
+    const projectsRoot = this.getProjectsRoot()
+
+    const entries = await FS.readdir(projectsRoot)
     await Promise.all(entries.map(async function(entry) {
       const path = Path.join(projectsRoot, entry)
       const stat = await FS.lstat(path)
       if (stat.isDirectory()) {
-        projects.push(path)
+        organizations.push(path)
       }
       return true
+    }))
+
+    await Promise.all(organizations.map(async function(orgPath) {
+      const items = await FS.readdir(orgPath)
+      for (const item of items) {
+        const itemPath = Path.join(orgPath, item)
+        const stat = await FS.lstat(itemPath)
+        if (stat.isDirectory()) {
+          projects.push(itemPath)
+        }
+      }
+      return null
     }))
     return projects
   }
