@@ -20,16 +20,16 @@ export default class Command {
   options: Options;
   utils: Utils;
   fs: FS;
-  // eslint-disable-next-line
-  run(...params: Array<any>) {
-    throw new Error('Command::run() is unimplemented')
-  }
-  initialize(options: Options) {
+  constructor(options: Options) {
     this.state = new ConfigFile(Path.join(options.stateDirectory, 'state.json'))
     this.config = new ConfigFile(Path.join(options.stateDirectory, 'config.json'))
     this.options = options
     this.utils = Utils
     this.fs = FS
+  }
+  // eslint-disable-next-line
+  run(...params: Array<any>) {
+    throw new Error('Command::run() is unimplemented')
   }
   getProjectsRoot(): string {
     return Helpers.processPath(this.config.get('projectsRoot'))
