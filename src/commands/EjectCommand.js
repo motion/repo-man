@@ -9,7 +9,7 @@ export default class EjectCommand extends Command {
 
   async run(_: Object, source: string = '.') {
     await this.ensureProjectsRoot()
-    const { Color, tildify } = this.utils
+    const { Color, tildify, prompt } = this.utils
 
     const sourceDir = Path.resolve(source)
     const sourceDirList = sourceDir.split(Path.sep)
@@ -22,7 +22,7 @@ export default class EjectCommand extends Command {
 
     // prompt for org to eject to
     const projectsPath = this.getProjectsRoot()
-    const answer = await this.utils.prompt(`Move to: ${tildify(projectsPath)}/_____/${sourceName}`, orgOpts)
+    const answer = await prompt(`Move to: ${tildify(projectsPath)}/_____/${sourceName}`, orgOpts)
 
     this.newline()
 
