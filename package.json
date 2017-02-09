@@ -17,20 +17,15 @@
     "flow-bin": "^0.38.0"
   },
   "dependencies": {
-    "cli-color": "^1.1.0",
-    "clui": "^0.3.1",
+    "cli-table": "^0.3.1",
     "eslint-config-steelbrain": "^2.0.0",
     "expand-tilde": "^2.0.2",
-    "figures": "^2.0.0",
     "git-state": "^3.1.0",
-    "package-info": "^2.2.3",
-    "pad": "^1.0.2",
     "process-bootstrap": "^1.0.0",
     "sb-command": "^1.0.0",
     "sb-config-file": "^1.1.0",
     "sb-copy": "^1.0.1",
     "sb-fs": "^1.1.1",
-    "sb-promisify": "^2.0.1",
-    "tildify": "^1.2.0"
+    "sb-promisify": "^2.0.1"
   }
 }
