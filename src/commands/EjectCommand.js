@@ -24,11 +24,16 @@ export default class EjectCommand extends Command {
     // prompt for org to eject to
     const projectsPath = this.getProjectsRoot()
     const answer = await this.utils.prompt(`Move to: ${tildify(projectsPath)}/_____/${sourceName}`, orgOpts)
+    this.newline()
     const org = orgs[orgs.findIndex(x => x.path === answer)]
 
     const targetDirectory = Path.join(org.path, sourceName)
 
-    this.log(`\nEjecting to ${Color.white(targetDirectory)}\n`)
+    if (await this.fs.exists(targetDirectory)) {
+      this.error(`Already exists! ${tildify(targetDirectory)}`)
+    }
+
+    this.log(`Ejecting to ${Color.white(targetDirectory)}\n`)
 
     this.log(`Successfully ejected '${tildify(sourcePath)}' to '${tildify(targetDirectory)}'`)
   }

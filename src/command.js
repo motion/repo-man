@@ -21,11 +21,13 @@ export default class Command {
   config: ConfigFile;
   options: Options;
   utils: Utils;
+  fs: FS;
   initialize(options: Options) {
     this.state = new ConfigFile(Path.join(options.stateDirectory, 'state.json'))
     this.config = new ConfigFile(Path.join(options.stateDirectory, 'config.json'))
     this.options = options
     this.utils = Utils
+    this.fs = FS
   }
   getProjectsRoot(): string {
     return Helpers.processPath(this.config.get('projectsRoot'))
@@ -136,5 +138,11 @@ export default class Command {
 
   log(text: string) {
     console.log(text)
+  }
+  newline() {
+    console.log('')
+  }
+  error(value: string) {
+    throw new Helpers.RepoManError(value)
   }
 }
