@@ -43,11 +43,9 @@ export default class Command {
     }
     return Path.join(projectsRoot, chunks[0], chunks[1])
   }
-  async getProjects(): Promise<Array<string>> {
-    const projects = []
+  async getOrganizations(): Promise<Array<string>> {
     const organizations = []
     const projectsRoot = this.getProjectsRoot()
-
     const entries = await FS.readdir(projectsRoot)
     await Promise.all(entries.map(async function(entry) {
       const path = Path.join(projectsRoot, entry)
@@ -57,7 +55,11 @@ export default class Command {
       }
       return true
     }))
-
+    return organizations
+  }
+  async getProjects(): Promise<Array<string>> {
+    const projects = []
+    const organizations = await this.getOrganizations()
     await Promise.all(organizations.map(async function(orgPath) {
       const items = await FS.readdir(orgPath)
       for (const item of items) {

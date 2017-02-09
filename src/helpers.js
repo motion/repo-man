@@ -7,7 +7,17 @@ import FS from 'sb-fs'
 import type { Options } from './types'
 
 export const CONFIG_FILE_NAME = '.repoman.json'
-export const BUILTIN_COMMANDS = new Set(['get', 'status', 'install', 'exec', 'bootstrap', 'publish'])
+
+export const BUILTIN_COMMANDS = new Set([
+  'get',
+  'status',
+  'install',
+  'exec',
+  'bootstrap',
+  'publish',
+  'eject',
+])
+
 export class RepoManError extends Error {
   constructor(message: string) {
     super(message)
