@@ -1,27 +1,35 @@
 // @flow
 
-import FS from 'sb-fs'
 import Command from '../command'
 import Path from 'path'
-import { ensureDoesntExist } from '../helpers'
 
 export default class EjectCommand extends Command {
   name = 'eject [source]'
   description = 'Move files at path to to-org and track'
 
   async run(_: Object, source: string = '.') {
+    const { Color } = this.utils
+
+    await this.ensureProjectsRoot()
+
+    const sourcePath = Path.resolve(source)
+    const sourcePathList = sourcePath.split(Path.sep)
+    const sourceName = sourcePathList[sourcePathList.length - 1]
+
+    this.log(`Ejecting ${Color.white(sourceName)}...\n`)
+
     const orgs = await this.getOrganizations()
+    const orgOpts = orgs.map(({ name, path }) => ({ name, value: path }))
 
     // prompt for org to eject to
-    const targetDirectory = await this.utils.prompt('Select organization', orgs)
+    const projectsPath = this.getProjectsRoot()
+    const answer = await this.utils.prompt(`Select folder ${projectsPath}/_____`, orgOpts)
+    const org = orgs[orgs.findIndex(x => x.path === answer)]
 
-    const pathList = targetDirectory.split(Path.sep)
-    const targetName = pathList[pathList.length - 1]
+    const targetDirectory = Path.join(org.path, sourceName)
 
-    const projectsRoot = this.getProjectsRoot()
-    await FS.mkdirp(projectsRoot)
-    await ensureDoesntExist(targetDirectory)
+    this.log(`\nEjecting to ${Color.white(targetDirectory)}\n`)
 
-    this.log(`Successfully ejected '${targetName}'`)
+    this.log(`Successfully ejected '${sourcePath}' to '${targetDirectory}'`)
   }
 }
