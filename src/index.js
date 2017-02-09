@@ -23,6 +23,7 @@ class RepoMan {
 
     this.context.addCommand(Commands.get.name, Commands.get.description, Commands.get.callback)
     this.context.addCommand(Commands.status.name, Commands.status.description, Commands.status.callback)
+    this.context.addCommand(Commands.install.name, Commands.install.description, Commands.install.callback)
   }
   getCommands(): Array<Command> {
     return this.context.getCommands()

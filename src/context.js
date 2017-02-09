@@ -27,6 +27,19 @@ export default class Context {
   getProjectsRoot(): string {
     return Helpers.processPath(this.config.get('projectsRoot'))
   }
+  async getCurrentProjectPath(): Promise<?string> {
+    const currentDirectory = process.cwd()
+    const projectsRoot = this.getProjectsRoot()
+    const rootIndex = currentDirectory.indexOf(projectsRoot)
+    if (rootIndex !== 0) {
+      return null
+    }
+    const chunks = currentDirectory.slice(projectsRoot.length + 1).split(Path.sep).slice(0, 2)
+    if (chunks.length !== 2) {
+      return null
+    }
+    return Path.join(projectsRoot, chunks[0], chunks[1])
+  }
   async getProjects(): Promise<Array<string>> {
     const projects = []
     const organizations = []
@@ -56,14 +69,16 @@ export default class Context {
     return projects
   }
   async getProjectDetails(path: string): Promise<Project> {
+    const name = path.split(Path.sep).slice(-2).join('/')
     const config = new ConfigFile(Path.join(path, Helpers.CONFIG_FILE_NAME), {
-      name: 'Untitled',
-      path,
       dependencies: [],
       configurations: [],
+    })
+    return Object.assign(config.get(), {
+      path,
+      name,
       repository: await this.getRepositoryDetails(path),
     })
-    return config.get()
   }
   async getRepositoryDetails(path: string): Promise<Repository> {
     const state = await getGitState(path)

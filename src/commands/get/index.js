@@ -2,14 +2,13 @@
 
 import FS from 'sb-fs'
 import Path from 'path'
-import * as Helpers from './helpers'
-import { RepoManError } from '../../helpers'
+import { parseSourceURI, RepoManError } from '../../helpers'
 
 export const name = 'get <remote_path>'
 export const description = 'Clone the given path into projects root'
 export async function callback(_: Object, path: string) {
   // clones the repo into projects dir
-  const parsed = Helpers.parseSourceURI(path)
+  const parsed = parseSourceURI(path)
   const projectsRoot = this.getProjectsRoot()
   const targetName = Path.join(parsed.username, parsed.repository)
   const targetDirectory = Path.join(projectsRoot, parsed.username, parsed.repository)

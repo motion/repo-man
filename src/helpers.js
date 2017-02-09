@@ -6,7 +6,7 @@ import expandTilde from 'expand-tilde'
 import type { Options } from './types'
 
 export const CONFIG_FILE_NAME = '.repoman.json'
-export const BUILTIN_COMMANDS = new Set(['get', 'status', 'exec', 'bootstrap', 'publish'])
+export const BUILTIN_COMMANDS = new Set(['get', 'status', 'install', 'exec', 'bootstrap', 'publish'])
 export class RepoManError extends Error {
   constructor(message: string) {
     super(message)
@@ -38,4 +38,20 @@ export function fillConfig(given: Object): Options {
   options.stateDirectory = processPath(options.stateDirectory)
 
   return options
+}
+
+const REGEX_URI_SCHEME = /^([0-9a-z-_]+)\/([0-9a-z-_]+)(#[a-f0-9]+)?$/i
+export function parseSourceURI(given: string): { username: string, repository: string, tag: ?string } {
+  if (!REGEX_URI_SCHEME.test(given)) {
+    throw new RepoManError(`Invalid source provided '${given}', supported syntax is username/repository#tag`)
+  }
+  let tag = null
+  const matched = REGEX_URI_SCHEME.exec(given)
+  const username = matched[1]
+  const repository = matched[2]
+  if (matched[3]) {
+    // Remove the hash in front
+    tag = matched[3].slice(1)
+  }
+  return { username, repository, tag }
 }
