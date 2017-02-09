@@ -2,16 +2,13 @@
 import FS from 'sb-fs'
 import Path from 'path'
 import Command from '../command'
-import GetCommand from './GetCommand'
 import { parseSourceURI, RepoManError } from '../helpers'
-
-const getProject = new GetCommand().run
 
 export default class InstallCommand extends Command {
   name = 'install'
   description = 'Install current project dependencies'
 
-  async run(options: Object) {
+  async run() {
     const currentProjectPath = await this.getCurrentProjectPath()
     if (!currentProjectPath) {
       throw new RepoManError('Current directory is not a Repoman project')
@@ -32,9 +29,10 @@ export default class InstallCommand extends Command {
       }
     }
 
+    const log = chunk => this.log(chunk.toString().trim())
     for (const dependency of dependencies) {
       try {
-        await getProject.call(this, options, dependency)
+        await this.spawn(process.execPath, [process.argv[1] || require.resolve('../../cli'), 'get', dependency], {}, log, log)
       } catch (error) {
         this.log(error)
         process.exitCode = 1
