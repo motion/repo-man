@@ -8,7 +8,7 @@ export default class EjectCommand extends Command {
   description = 'Move files at path to to-org and track'
 
   async run(_: Object, source: string = '.') {
-    const { Color } = this.utils
+    const { Color, tildify } = this.utils
 
     await this.ensureProjectsRoot()
 
@@ -23,13 +23,13 @@ export default class EjectCommand extends Command {
 
     // prompt for org to eject to
     const projectsPath = this.getProjectsRoot()
-    const answer = await this.utils.prompt(`Select folder ${projectsPath}/_____`, orgOpts)
+    const answer = await this.utils.prompt(`Move to: ${tildify(projectsPath)}/_____/${sourceName}`, orgOpts)
     const org = orgs[orgs.findIndex(x => x.path === answer)]
 
     const targetDirectory = Path.join(org.path, sourceName)
 
     this.log(`\nEjecting to ${Color.white(targetDirectory)}\n`)
 
-    this.log(`Successfully ejected '${sourcePath}' to '${targetDirectory}'`)
+    this.log(`Successfully ejected '${tildify(sourcePath)}' to '${tildify(targetDirectory)}'`)
   }
 }
