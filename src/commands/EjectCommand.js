@@ -8,13 +8,12 @@ export default class EjectCommand extends Command {
   description = 'Move files at path to to-org and track'
 
   async run(_: Object, source: string = '.') {
+    await this.ensureProjectsRoot()
     const { Color, tildify } = this.utils
 
-    await this.ensureProjectsRoot()
-
-    const sourcePath = Path.resolve(source)
-    const sourcePathList = sourcePath.split(Path.sep)
-    const sourceName = sourcePathList[sourcePathList.length - 1]
+    const sourceDir = Path.resolve(source)
+    const sourceDirList = sourceDir.split(Path.sep)
+    const sourceName = sourceDirList[sourceDirList.length - 1]
 
     this.log(`Ejecting ${Color.white(sourceName)}...\n`)
 
@@ -24,17 +23,20 @@ export default class EjectCommand extends Command {
     // prompt for org to eject to
     const projectsPath = this.getProjectsRoot()
     const answer = await this.utils.prompt(`Move to: ${tildify(projectsPath)}/_____/${sourceName}`, orgOpts)
+
     this.newline()
+
     const org = orgs[orgs.findIndex(x => x.path === answer)]
+    const targetDir = Path.join(org.path, sourceName)
 
-    const targetDirectory = Path.join(org.path, sourceName)
-
-    if (await this.fs.exists(targetDirectory)) {
-      this.error(`Already exists! ${tildify(targetDirectory)}`)
+    if (await this.fs.exists(targetDir)) {
+      this.error(`Already exists! ${tildify(targetDir)}`)
     }
 
-    this.log(`Ejecting to ${Color.white(targetDirectory)}\n`)
+    this.log(`Ejecting to ${Color.white(targetDir)}\n`)
 
-    this.log(`Successfully ejected '${tildify(sourcePath)}' to '${tildify(targetDirectory)}'`)
+    await this.fs.rename(sourceDir, targetDir)
+
+    this.log(`Successfully ejected '${tildify(sourceDir)}' to '${tildify(targetDir)}'`)
   }
 }
