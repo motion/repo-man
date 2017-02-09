@@ -16,13 +16,10 @@ export type Repository = {
   path: string,
 } & GitState
 
-export type Package = {
-  version: string,
-}
-
 export type Project = {
   name: string,
   path: string,
+  version: ?string,
   repository: Repository,
   dependencies: Array<string>,
   configurations: Array<string>,

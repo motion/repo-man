@@ -2,17 +2,14 @@
 
 import FS from 'sb-fs'
 import Path from 'path'
-import promisify from 'sb-promisify'
 import ConfigFile from 'sb-config-file'
 import ChildProcess from 'child_process'
-import PackageInfo from 'package-info'
+import getPackageInfo from 'package-info'
 import gitStatus from './helpers/git-status'
 import * as Utils from './context-utils'
 
 import * as Helpers from './helpers'
-import type { Options, Project, Repository, Package } from './types'
-
-const getPackageInfo = promisify(PackageInfo)
+import type { Options, Project, Repository } from './types'
 
 export default class Command {
   name: string;
@@ -87,29 +84,29 @@ export default class Command {
     return Object.assign(config.get(), {
       path,
       name,
+      version: await this.getPackageVersion(path),
       repository: await this.getRepositoryDetails(path),
-      package: await this.getPackageDetails(path),
     })
   }
   async getRepositoryDetails(path: string): Promise<Repository> {
-    const status = await gitStatus(path)
     return {
       path,
-      ...status,
+      ...await gitStatus(path),
     }
   }
-  async getPackageDetails(path: string): Promise<Package> {
+  async getPackageVersion(path: string): Promise<?string> {
+    const manifestPath = Path.join(path, 'package.json')
+    if (!await FS.exists(manifestPath)) {
+      return null
+    }
+    const manifest = (new ConfigFile(manifestPath)).get()
+    if (typeof manifest.name !== 'string') {
+      return null
+    }
     try {
-      const info = await getPackageInfo(path)
-      return {
-        version: info.version,
-      }
-    } catch (e) {
-      // no npm package
-    }
-    return {
-      version: '0.0.0',
-    }
+      const remoteManifest = await new Promise(resolve => getPackageInfo(manifest.name, resolve))
+      return remoteManifest || null
+    } catch (_) { return null }
   }
   async spawn(name: string, parameters: Array<string>, options: Object, onStdout: ?((chunk: string) => any), onStderr: ?((chunk: string) => any)) {
     return new Promise((resolve, reject) => {
