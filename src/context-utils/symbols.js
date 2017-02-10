@@ -5,4 +5,5 @@ export default {
   check: Color.green(Figures.tick),
   x: Color.red(Figures.cross),
   star: Color.yellow(Figures.star),
+  dot: Color.blackBright(Figures.bullet),
 }

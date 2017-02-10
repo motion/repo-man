@@ -15,66 +15,68 @@ export default class SyncCommand extends Command {
     const answer = await this.utils.prompt('Overwrite files on conflict?', ['no', 'yes'])
     const overwrite = answer === 'yes'
 
-    const errors = []
-    function handleError(e) {
-      errors.push(e)
-    }
-
-    let statuses = null
-
-    if (!orgName) {
+    async function getCurrentProject() {
       // current folder
       const currentProjectPath = await this.getCurrentProjectPath()
       if (!currentProjectPath) {
         throw new RepoManError('Current directory is not a Repoman project')
       }
-      await this.syncRepo(currentProjectPath, overwrite, (path, status) => {
-        statuses = { [path]: status }
+    }
+
+    const projects = orgName ? await this.getProjects(orgName) : [await getCurrentProject()]
+    const statuses = projects.reduce((acc, cur) => ({ ...acc, [cur]: 0 }), {})
+    const errors = []
+
+    function handleError(projectPath: string, e) {
+      statuses[projectPath] = 2
+      errors.push(e)
+    }
+
+    // log once before run
+    this.logStatuses(statuses)
+
+    // run syncs
+    await Promise.all(projects.map((projectPath) => {
+      return this.syncRepo(projectPath, overwrite, (path, status) => {
+        // log updated statuses
+        statuses[path] = status
         this.logStatuses(statuses)
       }, handleError)
-    } else {
-      // for entire organization
-      const projects = await this.getProjects(orgName)
-      statuses = projects.reduce((acc, cur) => ({ ...acc, [cur]: 0 }), {})
-      this.logStatuses(statuses)
-      await projects.map((projectPath) => {
-        return this.syncRepo(projectPath, overwrite, (path, status) => {
-          statuses[path] = status
-          this.logStatuses(statuses)
-        }, handleError)
-      })
-    }
+    }))
+
+    // persist statuses
+    this.logStatuses(statuses, true)
 
     if (errors.length) {
       process.exitCode = 1
       this.log(new RepoManError('Unable to sync project dependencies'))
-    }
-    else {
-      this.logStatuses(statuses, true)
+      this.log('Errors:')
+      this.log(errors.map(e => e.message).join('\n'))
     }
   }
 
   statuses = {
-    0: this.utils.Symbol.x,
+    0: this.utils.Symbol.dot,
     1: this.utils.Symbol.check,
+    2: this.utils.Symbol.x,
   }
 
   logStatuses(statuses: Object, persist: boolean) {
-    let out = ''
+    const out = []
     Object.keys(statuses).forEach((path) => {
       const status = statuses[path]
-      out += ` ${this.statuses[status]} ${this.utils.tildify(path)}\n`
+      out.push(` ${this.statuses[status]} ${this.utils.tildify(path)}`)
     })
+    // clear screen
+    process.stdout.write('\u001B[2J\u001B[0;0f')
+    process.stdout.write(out.join('\n'))
     if (persist) {
-      this.log(out)
-    } else {
-      process.stdout.clearLine()
-      process.stdout.cursorTo(0)
-      process.stdout.write(out)
+      console.log('\n')
     }
   }
 
-  async syncRepo(projectPath: string, overwrite: boolean, onStatus: Function, onError: Function) {
+  async syncRepo(projectPath: string, overwrite: boolean, onStatus: Function, onErrorPlain: Function) {
+    const onError = err => onErrorPlain(projectPath, err)
     const log = chunk => this.log(chunk.toString().trim())
     const projectsRoot = await this.getProjectsRoot()
 
@@ -103,6 +105,10 @@ export default class SyncCommand extends Command {
 
     // Configurations
     const configsRoot = this.getConfigsRoot()
+    if (!currentProject.configurations) {
+      onStatus(projectPath, 2)
+    }
+
     for (const entry of currentProject.configurations) {
       try {
         const parsed = parseSourceURI(entry)
