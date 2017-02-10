@@ -139,6 +139,7 @@ export default class SyncCommand extends Command {
           }
           // NOTE: We do not overwrite in install, we overwrite in update
           await copy(entryPath, project.path, {
+            filter: (source: string) => this.lastFolder(source) !== '.git',
             dotFiles: true,
             overwrite,
             failIfExists: false,
