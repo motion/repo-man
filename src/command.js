@@ -163,12 +163,27 @@ export default class Command {
       spawned.on('error', reject)
     })
   }
+  async updateConfigs(projects: Array<Project>): void {
+    // flatten
+    const configs = [].concat([
+      ...projects
+        .filter(p => p.configurations && p.configurations.length)
+        .map(p => p.configurations)
+    ])
+
+    await Promise.all(
+      configs.map(config => this.commands['get-config'].run({ silent: true }, config))
+    )
+  }
   lastFolder(path: string) {
     const list = path.split(Path.sep)
     return list[list.length - 1]
   }
 
   log(text: any) {
+    if (this.silent) {
+      return
+    }
     if (text && text.name === 'RepoManError') {
       console.log('Error:', text.message)
     } else {

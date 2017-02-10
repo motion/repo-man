@@ -44,6 +44,9 @@ export default class SyncCommand extends Command {
 
     // run syncs
     const projects = await Promise.all(projectPaths.map(project => this.getProjectDetails(project)))
+    // update project config files // TODO add flag
+    await this.updateConfigs(projects)
+
     await Promise.all(projects.map((project) =>
       this.syncRepo(project, overwrite, handleStatus, handleError)
     ))
