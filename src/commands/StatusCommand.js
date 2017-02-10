@@ -8,7 +8,7 @@ export default class StatusCommand extends Command {
   async run() {
     const projectPaths = await this.getProjects()
     const projects = await Promise.all(projectPaths.map(entry => this.getProjectDetails(entry)))
-    const { Table, Color, Figure, Symbol } = this.utils
+    const { Table, Color, Figure, Symbol, tildify } = this.utils
 
     const head = [
       '  project',
@@ -26,7 +26,7 @@ export default class StatusCommand extends Command {
       const isGit = typeof repo.clean !== 'undefined'
       const none = gray('-none-')
       const version = project.version || none
-      const path = gray(project.path)
+      const path = gray(tildify(project.path))
 
       if (isGit) {
         const isDirty = repo.clean ? Symbol.check : Symbol.x
