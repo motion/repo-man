@@ -13,15 +13,27 @@ export default class EjectCommand extends Command {
 
   async run({ config }, ...list: Array<string>) {
     const directories = list || ['.']
+    const { Color, Figure, tildify: tld } = this.utils
+
     await this.ensureProjectsRoot()
+    const ejects = []
     for (const dir of directories) {
-      await this.eject(config, dir)
+      ejects.push(
+        await this.eject(config, dir)
+      )
     }
-    this.log('👍, to delete:')
-    this.log(`rm -r ${directories.join(' ')}`)
+    for (const { sourceDir, targetDir, skipped } of ejects) {
+      if (skipped) {
+        this.log(`${Color.white(tld(sourceDir))} skipped`)
+      } else {
+        this.log(`${Color.white(tld(sourceDir))} ${Figure.arrowRight} ${Color.yellow.bold(tld(targetDir))}`)
+      }
+    }
+    this.log('👍')
+    this.log(`${directories.join(' ')}`)
   }
   eject = async (config: string, directory: string) => {
-    const { Color, tildify, prompt, Figure } = this.utils
+    const { Color, tildify, prompt } = this.utils
 
     const sourceDir = Path.resolve(directory)
     const sourceDirList = sourceDir.split(Path.sep)
@@ -38,25 +50,29 @@ export default class EjectCommand extends Command {
     }))
     const answerOrg = await prompt(`${prefixPath}/_____/${sourceName}`, orgOpts)
     this.newline()
+
+    const org = orgs[orgs.findIndex(x => x.path === answerOrg)]
+    const targetDir = Path.join(org.path, sourceName)
+
+    if (await FS.exists(targetDir)) {
+      this.log(Color.blackBright(`Skipping ${tildify(targetDir)}`))
+      return { sourceDir, targetDir, skipped: true }
+    }
+
+    await copy(sourceDir, targetDir)
+
     let finalConfig = config
     if (!config) {
       this.log('Config source? (git url or github/repo)')
       finalConfig = await prompt.input(':')
     }
 
-    const org = orgs[orgs.findIndex(x => x.path === answerOrg)]
-    const targetDir = Path.join(org.path, sourceName)
-
-    if (await FS.exists(targetDir)) {
-      this.log(Color.brightBlack(`Skipping ${tildify(targetDir)}`))
-      return
-    }
-    await copy(sourceDir, targetDir)
     // add config
     if (finalConfig) {
       const configFile = new ConfigFile(Path.join(targetDir, Helpers.CONFIG_FILE_NAME))
       configFile.set('configurations', [finalConfig])
     }
-    this.log(`${Color.white(tildify(sourceDir))} ${Figure.rightArrow} ${Color.yellow.bold(tildify(targetDir))}`)
+
+    return { sourceDir, targetDir }
   }
 }
