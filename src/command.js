@@ -101,11 +101,17 @@ export default class Command {
   }
   async getProjectDetails(path: string): Promise<Project> {
     const name = path.split(Path.sep).slice(-2).join('/')
-    const config = new ConfigFile(Path.join(path, Helpers.CONFIG_FILE_NAME), {
-      dependencies: [],
-      configurations: [],
-    })
-    return Object.assign(config.get(), {
+    const configFilePath = Path.join(path, Helpers.CONFIG_FILE_NAME)
+    let config = {}
+
+    if (await FS.exists(configFilePath)) {
+      config = new ConfigFile(configFilePath, {
+        dependencies: [],
+        configurations: [],
+      }).get()
+    }
+
+    return Object.assign(config, {
       path,
       name,
       version: await this.getPackageVersion(path),
