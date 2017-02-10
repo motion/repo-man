@@ -5,6 +5,7 @@ import GetConfig from './GetConfigCommand'
 import Status from './StatusCommand'
 import Sync from './SyncCommand'
 import Eject from './EjectCommand'
+import Init from './InitCommand'
 
 export default {
   Get,
@@ -12,4 +13,5 @@ export default {
   Status,
   Sync,
   Eject,
+  Init,
 }

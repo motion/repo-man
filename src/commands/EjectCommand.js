@@ -13,7 +13,6 @@ export default class EjectCommand extends Command {
   async run({ config }, source: string = '.') {
     await this.ensureProjectsRoot()
     const { Color, tildify, prompt } = this.utils
-
     const sourceDir = Path.resolve(source)
     const sourceDirList = sourceDir.split(Path.sep)
     const sourceName = sourceDirList[sourceDirList.length - 1]
@@ -31,8 +30,8 @@ export default class EjectCommand extends Command {
 
     let finalConfig = config
     if (!config) {
-      this.log('Config source? (any git repo, or Github shorthand):')
-      finalConfig = await prompt.input('config:')
+      this.log('Config source? (any git repo, or Github shorthand)')
+      finalConfig = await prompt.input(':')
     }
 
     const org = orgs[orgs.findIndex(x => x.path === answer)]
