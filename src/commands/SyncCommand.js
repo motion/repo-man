@@ -15,23 +15,66 @@ export default class SyncCommand extends Command {
     const answer = await this.utils.prompt('Overwrite files on conflict?', ['no', 'yes'])
     const overwrite = answer === 'yes'
 
+    const errors = []
+    function handleError(e) {
+      errors.push(e)
+    }
+
+    let statuses = null
+
     if (!orgName) {
       // current folder
       const currentProjectPath = await this.getCurrentProjectPath()
       if (!currentProjectPath) {
         throw new RepoManError('Current directory is not a Repoman project')
       }
-      this.syncRepo(currentProjectPath, overwrite)
+      await this.syncRepo(currentProjectPath, overwrite, (path, status) => {
+        statuses = { [path]: status }
+        this.logStatuses(statuses)
+      }, handleError)
     } else {
       // for entire organization
       const projects = await this.getProjects(orgName)
-      projects.forEach((projectPath) => {
-        this.syncRepo(projectPath, overwrite)
+      statuses = projects.reduce((acc, cur) => ({ ...acc, [cur]: 0 }), {})
+      this.logStatuses(statuses)
+      await projects.map((projectPath) => {
+        return this.syncRepo(projectPath, overwrite, (path, status) => {
+          statuses[path] = status
+          this.logStatuses(statuses)
+        }, handleError)
       })
+    }
+
+    if (errors.length) {
+      process.exitCode = 1
+      this.log(new RepoManError('Unable to sync project dependencies'))
+    }
+    else {
+      this.logStatuses(statuses, true)
     }
   }
 
-  async syncRepo(projectPath: string, overwrite: boolean) {
+  statuses = {
+    0: this.utils.Symbol.x,
+    1: this.utils.Symbol.check,
+  }
+
+  logStatuses(statuses: Object, persist: boolean) {
+    let out = ''
+    Object.keys(statuses).forEach((path) => {
+      const status = statuses[path]
+      out += ` ${this.statuses[status]} ${this.utils.tildify(path)}\n`
+    })
+    if (persist) {
+      this.log(out)
+    } else {
+      process.stdout.clearLine()
+      process.stdout.cursorTo(0)
+      process.stdout.write(out)
+    }
+  }
+
+  async syncRepo(projectPath: string, overwrite: boolean, onStatus: Function, onError: Function) {
     const log = chunk => this.log(chunk.toString().trim())
     const projectsRoot = await this.getProjectsRoot()
 
@@ -46,8 +89,7 @@ export default class SyncCommand extends Command {
           dependencies.push(entry)
         }
       } catch (error) {
-        this.log(error)
-        process.exitCode = 1
+        onError(error)
       }
     }
 
@@ -55,8 +97,7 @@ export default class SyncCommand extends Command {
       try {
         await this.spawn(process.execPath, [process.argv[1] || require.resolve('../../cli'), 'get', dependency], {}, log, log)
       } catch (error) {
-        this.log(error)
-        process.exitCode = 1
+        onError(error)
       }
     }
 
@@ -73,18 +114,13 @@ export default class SyncCommand extends Command {
         await copy(entryPath, projectPath, {
           dotFiles: true,
           overwrite,
-          failIfExists: !overwrite,
+          failIfExists: false,
         })
-      } catch (error) {
-        this.log(error)
-        process.exitCode = 1
-      }
-    }
 
-    if (process.exitCode === 1) {
-      this.log(new RepoManError('Unable to sync project dependencies'))
-    } else {
-      this.log(`Synced project dependencies: ${projectPath}`)
+        onStatus(projectPath, 1)
+      } catch (error) {
+        onError(error)
+      }
     }
   }
 }
