@@ -26,6 +26,16 @@ class RepoMan {
     this.addCommand(Commands.Status, options)
     this.addCommand(Commands.Sync, options)
     this.addCommand(Commands.Eject, options)
+
+    // allow commands to reference each other
+    const namedCommands = this.getNamedCommands()
+    this.commands.forEach(command => command.setCommands(namedCommands))
+  }
+  getNamedCommands(): Object<string, Command> {
+    return this.commands.reduce((acc, cur) => ({
+      ...acc,
+      [cur.name.split(' ')[0]]: cur,
+    }), {})
   }
   getCommands(): Array<Command> {
     return this.commands

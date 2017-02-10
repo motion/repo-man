@@ -5,6 +5,7 @@ import Path from 'path'
 import copy from 'sb-copy'
 import Command from '../command'
 import { parseSourceURI, RepoManError } from '../helpers'
+import type { Project } from '../types'
 
 const STATE = {
   ERR: 0,
@@ -22,26 +23,19 @@ export default class SyncCommand extends Command {
     const answer = await this.utils.prompt('Overwrite files on conflict?', ['no', 'yes'])
     const overwrite = answer === 'yes'
 
-    const getCurrentProject = async () => {
-      // current folder
-      const currentProjectPath = await this.getCurrentProjectPath()
-      if (!currentProjectPath) {
-        throw new RepoManError('Current directory is not a Repoman project')
-      }
-      return currentProjectPath
-    }
-
-    const projects = orgName ? await this.getProjects(orgName) : [await getCurrentProject()]
-    const statuses = projects.reduce((acc, cur) => ({
+    const projectPaths = orgName
+      ? await this.getProjects(orgName)
+      : [await this.getCurrentProject()]
+    const statuses = projectPaths.reduce((acc, cur) => ({
       ...acc,
-      [cur]: STATE.EMPTY
+      [cur]: STATE.EMPTY,
     }), {})
 
     const errors = []
-    const handleError = (projectPath: string, e) => errors.push(e)
-    const handleStatus = (path: string, status: number) => {
+    const handleError = (project: Project, error) => errors.push({ project, error })
+    const handleStatus = (project: Project, status: number) => {
       // log updated statuses
-      statuses[path] = status
+      statuses[project.path] = status
       this.logStatuses(statuses)
     }
 
@@ -49,9 +43,10 @@ export default class SyncCommand extends Command {
     this.logStatuses(statuses)
 
     // run syncs
-    await Promise.all(projects.map((projectPath) => {
-      return this.syncRepo(projectPath, overwrite, handleStatus, handleError)
-    }))
+    const projects = await Promise.all(projectPaths.map(project => this.getProjectDetails(project)))
+    await Promise.all(projects.map((project) =>
+      this.syncRepo(project, overwrite, handleStatus, handleError)
+    ))
 
     // persist statuses
     this.logStatuses(statuses, true)
@@ -62,6 +57,15 @@ export default class SyncCommand extends Command {
       this.log('Errors:')
       this.log(errors.map(e => e.message).join('\n'))
     }
+  }
+
+  getCurrentProject = async () => {
+    // current folder
+    const currentProjectPath = await this.getCurrentProjectPath()
+    if (!currentProjectPath) {
+      throw new RepoManError('Current directory is not a Repoman project')
+    }
+    return currentProjectPath
   }
 
   statuses = {
@@ -85,20 +89,19 @@ export default class SyncCommand extends Command {
     }
   }
 
-  async syncRepo(projectPath: string, overwrite: boolean, onStatus: Function, onErrorCb: Function) {
+  async syncRepo(project: Project, overwrite: boolean, onStatus: Function, onErrorCb: Function) {
     const onError = (err) => {
-      onErrorCb(projectPath, err)
-      onStatus(projectPath, STATE.FAIL)
+      onErrorCb(project, err)
+      onStatus(project, STATE.FAIL)
     }
     const log = chunk => this.log(chunk.toString().trim())
     const projectsRoot = await this.getProjectsRoot()
 
     // Dependencies
     const dependencies = []
-    const currentProject = await this.getProjectDetails(projectPath)
 
-    if (currentProject.dependencies) {
-      for (const entry of currentProject.dependencies) {
+    if (project.dependencies) {
+      for (const entry of project.dependencies) {
         try {
           const parsed = parseSourceURI(entry)
           const entryPath = Path.join(projectsRoot, parsed.username, parsed.repository)
@@ -120,11 +123,11 @@ export default class SyncCommand extends Command {
     }
 
     // Configurations
-    if (!currentProject.configurations) {
-      onStatus(projectPath, STATE.SKIP)
+    if (!project.configurations) {
+      onStatus(project, STATE.SKIP)
     } else {
       const configsRoot = this.getConfigsRoot()
-      for (const entry of currentProject.configurations) {
+      for (const entry of project.configurations) {
         try {
           const parsed = parseSourceURI(entry)
           const entryPath = Path.join(configsRoot, parsed.username, parsed.repository)
@@ -132,13 +135,13 @@ export default class SyncCommand extends Command {
             await this.spawn(process.execPath, [process.argv[1] || require.resolve('../../cli'), 'get-config', entry], {}, log, log)
           }
           // NOTE: We do not overwrite in install, we overwrite in update
-          await copy(entryPath, projectPath, {
+          await copy(entryPath, project.path, {
             dotFiles: true,
             overwrite,
             failIfExists: false,
           })
 
-          onStatus(projectPath, STATE.PASS)
+          onStatus(project, STATE.PASS)
         } catch (error) {
           onError(error)
         }

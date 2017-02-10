@@ -20,7 +20,6 @@ export default class GetConfigCommand extends Command {
     if (await FS.exists(targetDirectory)) {
       this.log(`Replacing old config at ${targetDirectory}`)
       await FS.rimraf(targetDirectory)
-      // throw new RepoManError(`Directory ${targetDirectory} already exists in Configs root`)
     }
 
     const params = ['clone', `git@github.com:${targetName}`, targetDirectory]

@@ -14,11 +14,12 @@ import type { Options, Project, Repository, Organization } from './types'
 export default class Command {
   name: string;
   description: string;
-
   utils: Utils;
   state: ConfigFile;
   config: ConfigFile;
   options: Options;
+  commands: Object<string, Command>;
+
   constructor(options: Options) {
     this.state = new ConfigFile(Path.join(options.stateDirectory, 'state.json'))
     this.config = new ConfigFile(Path.join(options.stateDirectory, 'config.json'))
@@ -28,9 +29,15 @@ export default class Command {
     // $FlowIgnore: Dirty patch but required
     this.run = this.run.bind(this)
   }
+  setCommands(commands: Object<string, Command>) {
+    this.commands = commands
+  }
   // eslint-disable-next-line
   run(...params: Array<any>) {
     throw new Error('Command::run() is unimplemented')
+  }
+  getCommands(): Object<string, Command> {
+    return this.commands
   }
   getProjectsRoot(): string {
     return Helpers.processPath(this.config.get('projectsRoot'))
