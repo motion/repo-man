@@ -3,12 +3,14 @@
 import FS from 'sb-fs'
 import Path from 'path'
 import Command from '../command'
+import * as Helpers from '../helpers'
+import ConfigFile from 'sb-config-file'
 
 export default class EjectCommand extends Command {
   name = 'eject [source]'
   description = 'Move files at path to to-org and track'
 
-  async run(_: Object, source: string = '.') {
+  async run({ config }, source: string = '.') {
     await this.ensureProjectsRoot()
     const { Color, tildify, prompt } = this.utils
 
@@ -27,6 +29,12 @@ export default class EjectCommand extends Command {
 
     this.newline()
 
+    let finalConfig = config
+    if (!config) {
+      this.log('Config source? (any git repo, or Github shorthand):')
+      finalConfig = await prompt.input('config:')
+    }
+
     const org = orgs[orgs.findIndex(x => x.path === answer)]
     const targetDir = Path.join(org.path, sourceName)
 
@@ -36,7 +44,14 @@ export default class EjectCommand extends Command {
 
     this.log(`Ejecting to ${Color.white(targetDir)}\n`)
 
+    // move
     await FS.rename(sourceDir, targetDir)
+
+    // add config
+    if (finalConfig) {
+      const configFile = new ConfigFile(Path.join(targetDir, Helpers.CONFIG_FILE_NAME))
+      configFile.set('configurations', [finalConfig])
+    }
 
     this.log(`Successfully ejected '${tildify(sourceDir)}' to '${tildify(targetDir)}'`)
   }

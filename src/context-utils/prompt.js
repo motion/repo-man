@@ -1,6 +1,6 @@
 import inquirer from 'inquirer'
 
-export default async function prompt(message, choices, options = {}) {
+async function prompt(message, choices, options = {}) {
   const { list } = await inquirer.prompt({
     type: 'list',
     name: 'list',
@@ -10,3 +10,14 @@ export default async function prompt(message, choices, options = {}) {
   })
   return list
 }
+
+prompt.input = async function(message) {
+  const { input } = await inquirer.prompt({
+    type: 'input',
+    name: 'input',
+    message,
+  })
+  return input
+}
+
+export default prompt
