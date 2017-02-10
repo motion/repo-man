@@ -6,4 +6,5 @@ export default {
   x: Color.red(Figures.cross),
   star: Color.yellow(Figures.star),
   dot: Color.blackBright(Figures.bullet),
+  play: Color.blackBright(Figures.play),
 }

@@ -104,6 +104,7 @@ export default class Command {
     const configFilePath = Path.join(path, Helpers.CONFIG_FILE_NAME)
     let config = {}
 
+    // get config from .repoman.json if exists
     if (await FS.exists(configFilePath)) {
       config = new ConfigFile(configFilePath, {
         dependencies: [],
