@@ -27,6 +27,7 @@ class RepoMan {
     this.addCommand(Commands.Sync, options)
     this.addCommand(Commands.Eject, options)
     this.addCommand(Commands.Init, options)
+    this.addCommand(Commands.Exec, options)
 
     // allow commands to reference each other
     const namedCommands = this.getNamedCommands()
