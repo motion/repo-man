@@ -2,29 +2,38 @@
 
 import FS from 'sb-fs'
 import Path from 'path'
+import ConfigFile from 'sb-config-file'
+import copy from 'sb-copy'
 import Command from '../command'
 import * as Helpers from '../helpers'
-import ConfigFile from 'sb-config-file'
 
 export default class EjectCommand extends Command {
-  name = 'eject [source]'
+  name = 'eject [directories...]'
   description = 'Move files at path to to-org and track'
 
-  async run({ config }, source: string = '.') {
+  async run({ config }, ...list: Array<string>) {
+    const directories = list || ['.']
     await this.ensureProjectsRoot()
-    const { Color, tildify, prompt } = this.utils
-    const sourceDir = Path.resolve(source)
+    for (const dir of directories) {
+      await this.eject(config, dir)
+    }
+    this.log('👍, to delete:')
+    this.log(`rm -r ${directories.join(' ')}`)
+  }
+  eject = async (config: string, directory: string) => {
+    const { Color, tildify, prompt, Figure } = this.utils
+
+    const sourceDir = Path.resolve(directory)
     const sourceDirList = sourceDir.split(Path.sep)
     const sourceName = sourceDirList[sourceDirList.length - 1]
 
-    this.log(`Ejecting ${Color.white(sourceName)}...\n`)
-
     const orgs = await this.getOrganizations()
-    const orgOpts = orgs.map(({ name, path }) => ({ name, value: path }))
 
     // prompt for org to eject to
     const projectsPath = this.getProjectsRoot()
-    const answer = await prompt(`Move to: ${tildify(projectsPath)}/_____/${sourceName}`, orgOpts)
+    const prefixPath = tildify(projectsPath)
+    const orgOpts = orgs.map(({ name, path }) => ({ name: `${new Array(prefixPath.length + 2).fill().join(' ')}${name}`, value: path }))
+    const answer = await prompt(`${prefixPath}/_____/${sourceName}`, orgOpts)
 
     this.newline()
 
@@ -36,15 +45,19 @@ export default class EjectCommand extends Command {
 
     const org = orgs[orgs.findIndex(x => x.path === answer)]
     const targetDir = Path.join(org.path, sourceName)
+    const targetExists = await FS.exists(targetDir)
 
-    if (await FS.exists(targetDir)) {
-      this.error(`Already exists! ${tildify(targetDir)}`)
+    if (!targetExists) {
+      await copy(sourceDir, targetDir)
+    } else {
+      const val = await prompt.input('overwrite? y/n')
+      if (val === 'y') {
+        await FS.rename(sourceDir, targetDir)
+      }
+      else {
+        this.log(Color.brightBlack(`Skipping ${tildify(targetDir)}`))
+      }
     }
-
-    this.log(`Ejecting to ${Color.white(targetDir)}\n`)
-
-    // move
-    await FS.rename(sourceDir, targetDir)
 
     // add config
     if (finalConfig) {
@@ -52,6 +65,6 @@ export default class EjectCommand extends Command {
       configFile.set('configurations', [finalConfig])
     }
 
-    this.log(`Successfully ejected '${tildify(sourceDir)}' to '${tildify(targetDir)}'`)
+    this.log(`${Color.white(tildify(sourceDir))} ${Figure.rightArrow} ${Color.yellow.bold(tildify(targetDir))}`)
   }
 }
