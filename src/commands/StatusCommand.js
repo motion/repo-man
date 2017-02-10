@@ -5,18 +5,23 @@ export default class StatusCommand extends Command {
   name = 'status'
   description = 'Get status of your projects'
 
-  async run() {
-    const projectPaths = await this.getProjects()
-    const projects = await Promise.all(projectPaths.map(entry => this.getProjectDetails(entry)))
+  async run({ npm }) {
     const { Table, Color, Figure, Symbol, tildify } = this.utils
 
-    const head = [
-      '  project',
-      'changes',
-      'branch',
-      'npm',
-      'path',
-    ].map(c => Color.xterm(247)(c))
+    const projectPaths = await this.getProjects()
+    const projects = await Promise.all(
+      projectPaths.map(entry =>
+        this.getProjectDetails(entry, npm)
+      )
+    )
+
+    let head = [
+      '  project', 'changes', 'branch', 'path',
+    ]
+    if (npm) {
+      head.push('npm version')
+    }
+    head = head.map(Color.xterm(247))
 
     const table = new Table({ head })
     const gray = Color.xterm(8)
@@ -35,8 +40,8 @@ export default class StatusCommand extends Command {
           `${isDirty} ${project.name}`,
           numChanged,
           `${Color.yellow(repo.branchLocal)} ${gray(Figure.arrowRight)} ${repo.branchRemote}`,
-          version,
           path,
+          version,
         ]
       }
       else {

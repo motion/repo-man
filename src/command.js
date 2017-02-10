@@ -106,7 +106,7 @@ export default class Command {
     }))
     return projects
   }
-  async getProjectDetails(path: string): Promise<Project> {
+  async getProjectDetails(path: string, npm: boolean): Promise<Project> {
     const name = path.split(Path.sep).slice(-2).join('/')
     const configFilePath = Path.join(path, Helpers.CONFIG_FILE_NAME)
     let config = {}
@@ -122,7 +122,7 @@ export default class Command {
     return Object.assign(config, {
       path,
       name,
-      version: await this.getPackageVersion(path),
+      version: npm ? await this.getPackageVersion(path) : null,
       repository: await this.getRepositoryDetails(path),
     })
   }
