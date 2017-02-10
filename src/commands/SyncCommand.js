@@ -15,12 +15,13 @@ export default class SyncCommand extends Command {
     const answer = await this.utils.prompt('Overwrite files on conflict?', ['no', 'yes'])
     const overwrite = answer === 'yes'
 
-    async function getCurrentProject() {
+    const getCurrentProject = async () => {
       // current folder
       const currentProjectPath = await this.getCurrentProjectPath()
       if (!currentProjectPath) {
         throw new RepoManError('Current directory is not a Repoman project')
       }
+      return currentProjectPath
     }
 
     const projects = orgName ? await this.getProjects(orgName) : [await getCurrentProject()]
