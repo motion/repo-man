@@ -3,7 +3,7 @@
 import invariant from 'assert'
 import expandTilde from 'expand-tilde'
 
-import type { Options } from './types'
+import type { Options, ParsedRepo } from './types'
 
 export const CONFIG_FILE_NAME = '.repoman.json'
 
@@ -52,12 +52,13 @@ export function fillConfig(given: Object): Options {
   return options
 }
 
-const REGEX_URI_SCHEME = /^([0-9a-z-_]+)\/([0-9a-z-_]+)(#[a-f0-9]+)?$/i
-export function parseSourceURI(given: string): { username: string, repository: string, tag: ?string } {
+const REGEX_URI_SCHEME = /^([0-9a-z-_]+)\/([0-9a-z-_]+)(#[a-f0-9]+)?(:[a-f0-9\/-_]+)?$/i
+export function parseSourceURI(given: string): ParsedRepo {
   if (!REGEX_URI_SCHEME.test(given)) {
     throw new RepoManError(`Invalid source provided '${given}', supported syntax is username/repository#tag`)
   }
   let tag = null
+  let subfolder = null
   const matched = REGEX_URI_SCHEME.exec(given)
   const username = matched[1]
   const repository = matched[2]
@@ -65,5 +66,9 @@ export function parseSourceURI(given: string): { username: string, repository: s
     // Remove the hash in front
     tag = matched[3].slice(1)
   }
-  return { username, repository, tag }
+  if (matched[4]) {
+    // Remove : in front
+    subfolder = matched[4].slice(1)
+  }
+  return { username, repository, tag, subfolder }
 }

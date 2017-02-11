@@ -97,12 +97,10 @@ export default class SyncCommand extends Command {
       onErrorCb(project, err)
       onStatus(project, STATE.FAIL)
     }
-    const log = chunk => this.log(chunk.toString().trim())
     const projectsRoot = await this.getProjectsRoot()
 
     // Dependencies
     const dependencies = []
-
     if (project.dependencies) {
       for (const entry of project.dependencies) {
         try {
@@ -115,10 +113,9 @@ export default class SyncCommand extends Command {
           onError(error)
         }
       }
-
       for (const dependency of dependencies) {
         try {
-          await this.spawn(process.execPath, [process.argv[1] || require.resolve('../../cli'), 'get', dependency], {}, log, log)
+          await this.commands.get.run({}, dependency)
         } catch (error) {
           onError(error)
         }
@@ -129,16 +126,15 @@ export default class SyncCommand extends Command {
     if (!project.configurations) {
       onStatus(project, STATE.SKIP)
     } else {
-      const configsRoot = this.getConfigsRoot()
       for (const entry of project.configurations) {
         try {
-          const parsed = parseSourceURI(entry)
-          const entryPath = Path.join(configsRoot, parsed.username, parsed.repository)
-          if (!await FS.exists(entryPath)) {
-            await this.spawn(process.execPath, [process.argv[1] || require.resolve('../../cli'), 'get-config', entry], {}, log, log)
+          const configPath = this.getConfigPath(parseSourceURI(entry))
+          console.log('got', configPath)
+          if (!await FS.exists(configPath)) {
+            await this.commands['get-config'].run({ silent: true }, entry)
           }
           // NOTE: We do not overwrite in install, we overwrite in update
-          await copy(entryPath, project.path, {
+          await copy(configPath, project.path, {
             filter: (source: string) => this.lastFolder(source) !== '.git',
             dotFiles: true,
             overwrite,

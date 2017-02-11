@@ -12,7 +12,7 @@ import * as Utils from './context-utils'
 const getPackageInfo = promisify(packageInfo)
 
 import * as Helpers from './helpers'
-import type { Options, Project, Repository, Organization } from './types'
+import type { Options, Project, Repository, Organization, ParsedRepo } from './types'
 
 export default class Command {
   name: string;
@@ -47,6 +47,14 @@ export default class Command {
   }
   getConfigsRoot(): string {
     return Path.join(this.getProjectsRoot(), 'configs')
+  }
+  getConfigPath(parsed: ParsedRepo): string {
+    return Path.join(...[
+      this.getConfigsRoot(),
+      parsed.username,
+      parsed.repository,
+      parsed.subfolder,
+    ].filter(x => !!x))
   }
   async ensureProjectsRoot(): Promise<void> {
     await FS.mkdirp(this.getProjectsRoot())
@@ -170,7 +178,7 @@ export default class Command {
   }
   async updateConfigs(projects: Array<Project>): void {
     // flatten
-    const configs = [].concat([
+    const configs: Array<string> = [].concat([
       ...projects
         .filter(p => p.configurations && p.configurations.length)
         .map(p => p.configurations)
