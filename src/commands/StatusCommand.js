@@ -15,18 +15,18 @@ export default class StatusCommand extends Command {
     )
 
     const head = [
-      '  project',
-      'changes',
-      'branch',
-      this.showNpm && 'npm',
-      'path',
+      this.row('  project'),
+      this.row('changes'),
+      this.row('branch'),
+      this.row(his.showNpm && 'npm'),
+      this.row('path'),
     ]
       .filter(x => !!x)
       .map(c => this.utils.Color.xterm(247)(c))
 
     const { min, round } = Math
-    const getWidth = () =>
-      min(30, round((process.stdout.columns / head.length) * 0.9))
+    const columns = process.stdout.columns
+    const getWidth = () => min(30, round((columns / head.length) * 0.9))
     const colWidths = head.map(getWidth)
     const table = new this.utils.Table({ head, colWidths })
 
@@ -35,6 +35,9 @@ export default class StatusCommand extends Command {
     final.forEach(r => table.push(r))
     this.log(table.print())
   }
+
+  row = (content, props) => ({ content, ...props })
+  crow = content => this.row(content, { hAlign: 'center' })
 
   getRow = async (project:? Project) => {
     const { Color, Figure, Symbol, tildify } = this.utils
@@ -52,11 +55,11 @@ export default class StatusCommand extends Command {
       const isDirty = repo.clean ? Symbol.check : Symbol.x
       const numChanged = repo.filesDirty + repo.filesUntracked
       response = [
-        `${isDirty} ${project.name}`,
-        numChanged || none,
-        `${Color.yellow(repo.branchLocal)} ${gray(Figure.arrowRight)} ${repo.branchRemote}`,
-        version,
-        path,
+        row(`${isDirty} ${project.name}`),
+        row(numChanged || none),
+        row(`${Color.yellow(repo.branchLocal)} ${gray(Figure.arrowRight)} ${repo.branchRemote}`),
+        row(version),
+        row(path),
       ]
     }
     else {
