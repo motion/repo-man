@@ -4,9 +4,12 @@ import FS from 'sb-fs'
 import Path from 'path'
 import ConfigFile from 'sb-config-file'
 import ChildProcess from 'child_process'
-import getPackageInfo from 'package-info'
+import packageInfo from 'package-info'
+import promisify from 'sb-promisify'
 import gitStatus from './helpers/git-status'
 import * as Utils from './context-utils'
+
+const getPackageInfo = promisify(packageInfo)
 
 import * as Helpers from './helpers'
 import type { Options, Project, Repository, Organization } from './types'
@@ -122,7 +125,7 @@ export default class Command {
     return Object.assign(config, {
       path,
       name,
-      version: npm ? await this.getPackageVersion(path) : null,
+      npm: npm ? await this.getPackageInfo(path) : null,
       repository: await this.getRepositoryDetails(path),
     })
   }
@@ -136,7 +139,7 @@ export default class Command {
       return { path }
     }
   }
-  async getPackageVersion(path: string): Promise<?string> {
+  async getPackageInfo(path: string): Promise<?string> {
     const manifestPath = Path.join(path, 'package.json')
     if (!await FS.exists(manifestPath)) {
       return null
@@ -146,9 +149,11 @@ export default class Command {
       return null
     }
     try {
-      const remoteManifest = await new Promise(resolve => getPackageInfo(manifest.name, resolve))
+      const remoteManifest = await getPackageInfo(manifest.name)
       return remoteManifest || null
-    } catch (_) { return null }
+    } catch (_) {
+      return null
+    }
   }
   async spawn(name: string, parameters: Array<string>, options: Object, onStdout: ?((chunk: string) => any), onStderr: ?((chunk: string) => any)) {
     return new Promise((resolve, reject) => {

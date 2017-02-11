@@ -17,11 +17,11 @@ export default class StatusCommand extends Command {
     const titles = ['project', 'changes', 'branch', 'npm', 'path']
       .map(c => this.utils.Color.xterm(247)(c))
     const head = [
-      this.row(`  ${titles[0]}`),
+      `  ${titles[0]}`,
       this.crow(titles[1]),
-      this.row(titles[2]),
+      this.crow(titles[2]),
       this.showNpm && this.crow(titles[3]),
-      this.row(titles[4]),
+      titles[4],
     ]
       .filter(x => !!x)
 
@@ -50,18 +50,18 @@ export default class StatusCommand extends Command {
 
     let response
     const version = this.showNpm
-      ? this.crow(project.version || none)
+      ? this.crow(project.npm ? project.npm.version : none)
       : false
 
     if (isGit) {
       const isDirty = repo.clean ? Symbol.check : Symbol.x
       const numChanged = repo.filesDirty + repo.filesUntracked
       response = [
-        this.row(`${isDirty} ${project.name}`),
+        `${isDirty} ${project.name}`,
         this.crow(numChanged || none),
-        this.row(`${Color.yellow(repo.branchLocal)} ${gray(Figure.arrowRight)} ${repo.branchRemote}`),
+        `${Color.yellow(repo.branchLocal)} ${gray(Figure.arrowRight)} ${repo.branchRemote}`,
         version,
-        this.row(path),
+        path,
       ]
     }
     else {

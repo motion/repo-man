@@ -16,10 +16,16 @@ export type Repository = {
   path: string,
 } & GitState
 
+export type NpmInfo = {
+  name: string,
+  version: string,
+  description: string,
+}
+
 export type Project = {
   name: string,
   path: string,
-  version: ?string,
+  npm: NpmInfo,
   repository: Repository,
   dependencies: Array<string>,
   configurations: Array<string>,
