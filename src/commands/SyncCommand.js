@@ -129,7 +129,6 @@ export default class SyncCommand extends Command {
       for (const entry of project.configurations) {
         try {
           const configPath = this.getConfigPath(parseSourceURI(entry))
-          console.log('got', configPath)
           if (!await FS.exists(configPath)) {
             await this.commands['get-config'].run({ silent: true }, entry)
           }
