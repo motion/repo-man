@@ -14,15 +14,16 @@ export default class StatusCommand extends Command {
       projectPaths.map(entry => this.getProjectDetails(entry, this.showNpm))
     )
 
+    const titles = ['project', 'changes', 'branch', 'npm', 'path']
+      .map(c => this.utils.Color.xterm(247)(c))
     const head = [
-      this.row('  project'),
-      this.row('changes'),
-      this.row('branch'),
-      this.row(his.showNpm && 'npm'),
-      this.row('path'),
+      this.row(`  ${titles[0]}`),
+      this.crow(titles[1]),
+      this.row(titles[2]),
+      this.showNpm && this.crow(titles[3]),
+      this.row(titles[4]),
     ]
       .filter(x => !!x)
-      .map(c => this.utils.Color.xterm(247)(c))
 
     const { min, round } = Math
     const columns = process.stdout.columns
@@ -41,32 +42,33 @@ export default class StatusCommand extends Command {
 
   getRow = async (project:? Project) => {
     const { Color, Figure, Symbol, tildify } = this.utils
-
     const gray = Color.xterm(8)
     const repo = project.repository
     const isGit = typeof repo.clean !== 'undefined'
-    const none = gray('  -  ')
+    const none = gray(' - ')
     const path = gray(tildify(project.path))
 
     let response
-    const version = this.showNpm ? project.version || none : false
+    const version = this.showNpm
+      ? this.crow(project.version || none)
+      : false
 
     if (isGit) {
       const isDirty = repo.clean ? Symbol.check : Symbol.x
       const numChanged = repo.filesDirty + repo.filesUntracked
       response = [
-        row(`${isDirty} ${project.name}`),
-        row(numChanged || none),
-        row(`${Color.yellow(repo.branchLocal)} ${gray(Figure.arrowRight)} ${repo.branchRemote}`),
-        row(version),
-        row(path),
+        this.row(`${isDirty} ${project.name}`),
+        this.crow(numChanged || none),
+        this.row(`${Color.yellow(repo.branchLocal)} ${gray(Figure.arrowRight)} ${repo.branchRemote}`),
+        version,
+        this.row(path),
       ]
     }
     else {
       response = [
         `  ${project.name}`,
-        none,
-        none,
+        this.crow(none),
+        this.crow(none),
         version,
         path,
       ]
