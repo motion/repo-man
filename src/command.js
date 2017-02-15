@@ -8,19 +8,19 @@ import packageInfo from 'package-info'
 import promisify from 'sb-promisify'
 import gitStatus from './helpers/git-status'
 import * as Utils from './context-utils'
-
-const getPackageInfo = promisify(packageInfo)
-
 import * as Helpers from './helpers'
 import type { Options, Project, Repository, Organization, ParsedRepo } from './types'
 
+const getPackageInfo = promisify(packageInfo)
+
 export default class Command {
   name: string;
-  description: string;
   utils: Utils;
   state: ConfigFile;
+  silent: boolean;
   config: ConfigFile;
   options: Options;
+  description: string;
   commands: Object<string, Command>;
 
   constructor(options: Options) {
@@ -100,8 +100,7 @@ export default class Command {
     // allow finding for specific organization
     if (orgName) {
       organizations = [await this.getOrganization(orgName)]
-    }
-    else {
+    } else {
       organizations = await this.getOrganizations()
     }
     await Promise.all(organizations.map(async function({ path }) {
@@ -176,7 +175,7 @@ export default class Command {
       spawned.on('error', reject)
     })
   }
-  async updateConfigs(projects: Array<Project>): void {
+  async updateConfigs(projects: Array<Project>): Promise<void> {
     // flatten
     const configs: Array<string> = [].concat([
       ...projects

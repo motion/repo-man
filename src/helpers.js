@@ -52,7 +52,7 @@ export function fillConfig(given: Object): Options {
   return options
 }
 
-const REGEX_URI_SCHEME = /^([0-9a-z-_]+)\/([0-9a-z-_]+)(#[a-f0-9]+)?(:[a-f0-9\/-_]+)?$/i
+const REGEX_URI_SCHEME = /^([0-9a-z-_]+)\/([0-9a-z-_]+)(#[a-f0-9]+)?(:[0-9a-z-_]+)?$/i
 export function parseSourceURI(given: string): ParsedRepo {
   if (!REGEX_URI_SCHEME.test(given)) {
     throw new RepoManError(`Invalid source provided '${given}', supported syntax is username/repository#tag`)
