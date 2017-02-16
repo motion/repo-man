@@ -56,18 +56,17 @@ export default class Command {
   async ensureProjectsRoot(): Promise<void> {
     await FS.mkdirp(this.getProjectsRoot())
   }
-  async getCurrentProjectPath(): Promise<?string> {
+  async getCurrentProjectPath(): Promise<string> {
     const currentDirectory = process.cwd()
     const projectsRoot = this.getProjectsRoot()
     const rootIndex = currentDirectory.indexOf(projectsRoot)
-    if (rootIndex !== 0) {
-      return null
+    if (rootIndex === 0) {
+      const chunks = currentDirectory.slice(projectsRoot.length + 1).split(Path.sep).slice(0, 2)
+      if (chunks.length === 2) {
+        return Path.join(projectsRoot, chunks[0], chunks[1])
+      }
     }
-    const chunks = currentDirectory.slice(projectsRoot.length + 1).split(Path.sep).slice(0, 2)
-    if (chunks.length !== 2) {
-      return null
-    }
-    return Path.join(projectsRoot, chunks[0], chunks[1])
+    throw new RepoManError('Current directory is not a Repoman project')
   }
   async getOrganizations(): Promise<Array<Organization>> {
     const organizations = []

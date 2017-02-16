@@ -7,6 +7,7 @@ import Table from './table'
 import Symbol from './symbols'
 import prompt from './prompt'
 import gitStatus from './git-status'
+import { RepoManError } from '../../helpers'
 
 export default {
   tildify,
@@ -16,4 +17,5 @@ export default {
   Symbol,
   prompt,
   gitStatus,
+  RepoManError,
 }

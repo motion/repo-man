@@ -6,7 +6,7 @@ import copy from 'sb-copy'
 import invariant from 'assert'
 
 import Command from '../command'
-import { parseSourceURI, RepoManError } from '../helpers'
+import { parseSourceURI } from '../helpers'
 import type { Project } from '../types'
 
 const STATE = {
@@ -28,7 +28,7 @@ export default class SyncCommand extends Command {
 
     const projectPaths = orgName
       ? await this.getProjects(orgName)
-      : [await this.getCurrentProject()]
+      : [await this.getCurrentProjectPath()]
     const statuses = projectPaths.reduce((acc, cur) => ({
       ...acc,
       [cur]: STATE.EMPTY,
@@ -59,19 +59,10 @@ export default class SyncCommand extends Command {
 
     if (errors.length) {
       process.exitCode = 1
-      this.log(new RepoManError('Unable to sync project dependencies'))
+      this.log(new this.helpers.RepoManError('Unable to sync project dependencies'))
       this.log('Errors:')
       this.log(errors.map(e => e.error.message).join('\n'))
     }
-  }
-
-  async getCurrentProject() {
-    // current folder
-    const currentProjectPath = await this.getCurrentProjectPath()
-    if (!currentProjectPath) {
-      throw new RepoManError('Current directory is not a Repoman project')
-    }
-    return currentProjectPath
   }
 
   statuses = {
