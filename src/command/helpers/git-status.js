@@ -1,5 +1,7 @@
+// @flow
+
 import { exec } from 'sb-exec'
-import type { GitState } from '../types'
+import type { GitState } from '../../types'
 
 const REGEX_BRANCH_INFO = /^## (.*?)\.\.\.(.*)$/
 const REGEX_FILE_MODIFIED = /^ *M .*/
@@ -26,7 +28,7 @@ export function parseGitStatus(output: string): GitState {
   }
 
   return {
-    clean: Boolean(!(filesDirty || filesUntracked)),
+    clean: !(filesDirty || filesUntracked),
     branchLocal,
     branchRemote,
     filesDirty,
@@ -34,6 +36,6 @@ export function parseGitStatus(output: string): GitState {
   }
 }
 
-export default function gitStatus(cwd) {
+export default function gitStatus(cwd: string) {
   return exec('git', ['status', '--porcelain', '-b'], { cwd }).then(parseGitStatus)
 }

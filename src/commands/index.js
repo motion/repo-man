@@ -8,7 +8,7 @@ import Eject from './EjectCommand'
 import Init from './InitCommand'
 import Exec from './ExecCommand'
 
-export default {
+export default [
   Get,
   GetConfig,
   Status,
@@ -16,4 +16,4 @@ export default {
   Eject,
   Init,
   Exec,
-}
+]

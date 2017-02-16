@@ -1,4 +1,5 @@
 // @flow
+
 import Command from '../command'
 import type { Project } from '../types'
 
@@ -6,8 +7,9 @@ export default class StatusCommand extends Command {
   name = 'status'
   description = 'Get status of your projects'
 
-  async run(_) {
-    this.showNpm = !!Object.keys(_).filter(x => x === 'npm').length
+  showNpm: boolean;
+  async run(options: Object) {
+    this.showNpm = !!Object.keys(options).filter(x => x === 'npm').length
 
     const projectPaths = await this.getProjects()
     const projects = await Promise.all(
@@ -15,7 +17,7 @@ export default class StatusCommand extends Command {
     )
 
     const titles = ['project', 'changes', 'branch', 'npm', 'path']
-      .map(c => this.utils.Color.xterm(247)(c))
+      .map(c => this.helpers.Color.xterm(247)(c))
     const head = [
       `  ${titles[0]}`,
       this.crow(titles[1]),
@@ -29,19 +31,18 @@ export default class StatusCommand extends Command {
     const columns = process.stdout.columns
     const getWidth = () => min(30, round((columns / head.length) * 0.9))
     const colWidths = head.map(getWidth)
-    const table = new this.utils.Table({ head, colWidths })
+    const table = new this.helpers.Table({ head, colWidths })
 
     // response
-    const final = await Promise.all(projects.map(this.getRow))
-    final.forEach(r => table.push(r))
-    this.log(table.print())
+    table.from(await Promise.all(projects.map(project => this.getRow(project))))
+    this.log(table.show())
   }
 
   row = (content, props) => ({ content, ...props })
   crow = content => this.row(content, { hAlign: 'center' })
 
-  getRow = async (project:? Project) => {
-    const { Color, Figure, Symbol, tildify } = this.utils
+  async getRow(project: Project) {
+    const { Color, Figure, Symbol, tildify } = this.helpers
     const gray = Color.xterm(8)
     const repo = project.repository
     const isGit = typeof repo.clean !== 'undefined'
@@ -61,16 +62,15 @@ export default class StatusCommand extends Command {
         this.crow(numChanged || none),
         `${Color.yellow(repo.branchLocal)} ${gray(Figure.arrowRight)} ${repo.branchRemote}`,
         version,
-        path,
+        tildify(path),
       ]
-    }
-    else {
+    } else {
       response = [
         `  ${project.name}`,
         this.crow(none),
         this.crow(none),
         version,
-        path,
+        tildify(path),
       ]
     }
     return response.filter(x => !!x)

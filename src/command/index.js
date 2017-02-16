@@ -2,75 +2,71 @@
 
 import FS from 'sb-fs'
 import Path from 'path'
+import invariant from 'assert'
+import promisify from 'sb-promisify'
+import packageInfo from 'package-info'
+import expandTilde from 'expand-tilde'
 import ConfigFile from 'sb-config-file'
 import ChildProcess from 'child_process'
-import packageInfo from 'package-info'
-import promisify from 'sb-promisify'
-import gitStatus from './helpers/git-status'
-import * as Utils from './context-utils'
+
+import Helpers from './helpers'
+
+import { CONFIG_FILE_NAME, RepoManError } from '../helpers'
+import type RepoMan from '../'
+import type { Options, Project, Repository, Organization, ParsedRepo } from '../types'
 
 const getPackageInfo = promisify(packageInfo)
 
-import * as Helpers from './helpers'
-import type { Options, Project, Repository, Organization, ParsedRepo } from './types'
-
 export default class Command {
   name: string;
-  description: string;
-  utils: Utils;
   state: ConfigFile;
+  silent: boolean;
   config: ConfigFile;
   options: Options;
-  commands: Object<string, Command>;
+  helpers: typeof Helpers;
+  repoMan: RepoMan;
+  description: string;
 
-  constructor(options: Options) {
+  constructor(options: Options, repoMan: RepoMan) {
     this.state = new ConfigFile(Path.join(options.stateDirectory, 'state.json'))
     this.config = new ConfigFile(Path.join(options.stateDirectory, 'config.json'))
     this.options = options
-    this.utils = Utils
-
-    // $FlowIgnore: Dirty patch but required
-    this.run = this.run.bind(this)
-  }
-  setCommands(commands: Object<string, Command>) {
-    this.commands = commands
+    this.repoMan = repoMan
+    this.helpers = Helpers
   }
   // eslint-disable-next-line
   run(...params: Array<any>) {
     throw new Error('Command::run() is unimplemented')
   }
-  getCommands(): Object<string, Command> {
-    return this.commands
-  }
   getProjectsRoot(): string {
-    return Helpers.processPath(this.config.get('projectsRoot'))
+    return expandTilde(this.config.get('projectsRoot'))
   }
   getConfigsRoot(): string {
     return Path.join(this.getProjectsRoot(), 'configs')
   }
   getConfigPath(parsed: ParsedRepo): string {
+    const subfolder = parsed.subfolder || ''
     return Path.join(...[
       this.getConfigsRoot(),
       parsed.username,
       parsed.repository,
-      parsed.subfolder,
+      subfolder,
     ].filter(x => !!x))
   }
   async ensureProjectsRoot(): Promise<void> {
     await FS.mkdirp(this.getProjectsRoot())
   }
-  async getCurrentProjectPath(): Promise<?string> {
+  async getCurrentProjectPath(): Promise<string> {
     const currentDirectory = process.cwd()
     const projectsRoot = this.getProjectsRoot()
     const rootIndex = currentDirectory.indexOf(projectsRoot)
-    if (rootIndex !== 0) {
-      return null
+    if (rootIndex === 0) {
+      const chunks = currentDirectory.slice(projectsRoot.length + 1).split(Path.sep).slice(0, 2)
+      if (chunks.length === 2) {
+        return Path.join(projectsRoot, chunks[0], chunks[1])
+      }
     }
-    const chunks = currentDirectory.slice(projectsRoot.length + 1).split(Path.sep).slice(0, 2)
-    if (chunks.length !== 2) {
-      return null
-    }
-    return Path.join(projectsRoot, chunks[0], chunks[1])
+    throw new RepoManError('Current directory is not a Repoman project')
   }
   async getOrganizations(): Promise<Array<Organization>> {
     const organizations = []
@@ -88,7 +84,7 @@ export default class Command {
   }
   async getOrganization(name: string): Promise<Organization> {
     const organizations = await this.getOrganizations()
-    const index = organizations.findIndex(org => this.lastFolder(org.path) === name)
+    const index = organizations.findIndex(org => Path.basename(org.path) === name)
     if (index === -1) {
       this.error(`No organization found: ${name}`)
     }
@@ -100,8 +96,7 @@ export default class Command {
     // allow finding for specific organization
     if (orgName) {
       organizations = [await this.getOrganization(orgName)]
-    }
-    else {
+    } else {
       organizations = await this.getOrganizations()
     }
     await Promise.all(organizations.map(async function({ path }) {
@@ -117,10 +112,13 @@ export default class Command {
     }))
     return projects
   }
-  async getProjectDetails(path: string, npm: boolean): Promise<Project> {
+  async getProjectDetails(path: string, npm: boolean = false): Promise<Project> {
     const name = path.split(Path.sep).slice(-2).join('/')
-    const configFilePath = Path.join(path, Helpers.CONFIG_FILE_NAME)
-    let config = {}
+    const configFilePath = Path.join(path, CONFIG_FILE_NAME)
+    let config: Object = {
+      dependencies: [],
+      configurations: [],
+    }
 
     // get config from .repoman.json if exists
     if (await FS.exists(configFilePath)) {
@@ -141,10 +139,17 @@ export default class Command {
     try {
       return {
         path,
-        ...await gitStatus(path),
+        ...await Helpers.gitStatus(path),
       }
     } catch (e) {
-      return { path }
+      return {
+        path,
+        clean: true,
+        branchLocal: '',
+        branchRemote: '',
+        filesDirty: 0,
+        filesUntracked: 0,
+      }
     }
   }
   async getPackageInfo(path: string): Promise<?string> {
@@ -176,23 +181,16 @@ export default class Command {
       spawned.on('error', reject)
     })
   }
-  async updateConfigs(projects: Array<Project>): void {
-    // flatten
-    const configs: Array<string> = [].concat([
-      ...projects
-        .filter(p => p.configurations && p.configurations.length)
-        .map(p => p.configurations)
-    ])
+  async updateConfigs(projects: Array<Project>): Promise<void> {
+    let configs: Array<string> = []
+    projects.forEach(function(project) {
+      configs = configs.concat(project.configurations)
+    })
+    const commandGetConfig = this.repoMan.commands.get('get-config')
+    invariant(commandGetConfig, 'get-config command not found while updating configs')
 
-    await Promise.all(
-      configs.map(config => this.commands['get-config'].run({ silent: true }, config))
-    )
+    await Promise.all(configs.map(config => commandGetConfig.run({ silent: true }, config)))
   }
-  lastFolder(path: string) {
-    const list = path.split(Path.sep)
-    return list[list.length - 1]
-  }
-
   log(text: any) {
     if (this.silent) {
       return
@@ -207,6 +205,6 @@ export default class Command {
     console.log('')
   }
   error(value: string) {
-    throw new Helpers.RepoManError(value)
+    throw new RepoManError(value)
   }
 }

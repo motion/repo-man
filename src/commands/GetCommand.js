@@ -22,12 +22,7 @@ export default class GetCommand extends Command {
     }
 
     const params = ['clone', `git@github.com:${targetName}`, targetDirectory]
-    const logOutput = (givenChunk) => {
-      const chunk = givenChunk.toString('utf8').trim()
-      if (chunk.length) {
-        this.log(chunk)
-      }
-    }
+    const logOutput = givenChunk => this.log(givenChunk.toString('utf8').trim())
     const cloneExitCode = await this.spawn('git', params, { cwd: projectsRoot }, logOutput, logOutput)
     if (cloneExitCode !== 0) {
       process.exitCode = 1

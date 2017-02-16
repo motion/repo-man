@@ -1,3 +1,5 @@
+// @flow
+
 import Path from 'path'
 import ConfigFile from 'sb-config-file'
 import FS from 'sb-fs'
@@ -14,7 +16,7 @@ export default class InitCommand extends Command {
     }
 
     this.log('Config source? (any git repo, or Github shorthand)')
-    const config = await this.utils.prompt.input(':')
+    const config = await this.helpers.prompt.input(':')
 
     const configFilePath = Path.join(process.cwd(), Helpers.CONFIG_FILE_NAME)
     const configFile = new ConfigFile(configFilePath)

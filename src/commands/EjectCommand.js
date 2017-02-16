@@ -11,9 +11,9 @@ export default class EjectCommand extends Command {
   name = 'eject [directories...]'
   description = 'Move files at path to to-org and track'
 
-  async run({ config }, ...list: Array<string>) {
+  async run({ config }: Object, ...list: Array<string>) {
     const directories = list || ['.']
-    const { Color, Figure, tildify: tld } = this.utils
+    const { Color, Figure, tildify: tld } = this.helpers
 
     await this.ensureProjectsRoot()
     const ejects = []
@@ -32,8 +32,8 @@ export default class EjectCommand extends Command {
     this.log('👍')
     this.log(`${directories.join(' ')}`)
   }
-  eject = async (config: string, directory: string) => {
-    const { Color, tildify, prompt } = this.utils
+  async eject(config: string, directory: string) {
+    const { Color, tildify, prompt } = this.helpers
 
     const sourceDir = Path.resolve(directory)
     const sourceDirList = sourceDir.split(Path.sep)
@@ -73,6 +73,6 @@ export default class EjectCommand extends Command {
       configFile.set('configurations', [finalConfig])
     }
 
-    return { sourceDir, targetDir }
+    return { sourceDir, targetDir, skipped: false }
   }
 }

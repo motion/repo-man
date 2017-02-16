@@ -31,7 +31,7 @@ RepoMan.get().then(function(repoMan) {
 
   const registerCommand = (c) => {
     const prefix = !isBuiltinCommand(c.name) ? 'run.' : ''
-    command.command(`${prefix}${c.name}`, c.description, c.run)
+    command.command(`${prefix}${c.name}`, c.description, (...params) => c.run(...params))
   }
 
   // First register builtin commands
