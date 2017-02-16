@@ -34,7 +34,7 @@ class RepoMan {
     invariant(typeof Entry.prototype.name === 'string', 'name must be a string')
     invariant(typeof Entry.prototype.description === 'string', 'description must be a string')
     invariant(typeof Entry.prototype.run === 'function', 'run must be a function')
-    const command = new Entry(options)
+    const command = new Entry(options, this)
     this.removeCommand(command.name)
     this.commands.set(command.name, command)
   }

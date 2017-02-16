@@ -2,6 +2,7 @@
 
 import FS from 'sb-fs'
 import Path from 'path'
+import invariant from 'assert'
 import ConfigFile from 'sb-config-file'
 import ChildProcess from 'child_process'
 import packageInfo from 'package-info'
@@ -9,6 +10,7 @@ import promisify from 'sb-promisify'
 import gitStatus from './helpers/git-status'
 import * as Utils from './context-utils'
 import * as Helpers from './helpers'
+import type RepoMan from './'
 import type { Options, Project, Repository, Organization, ParsedRepo } from './types'
 
 const getPackageInfo = promisify(packageInfo)
@@ -21,26 +23,21 @@ export default class Command {
   config: ConfigFile;
   options: Options;
   description: string;
-  commands: Object;
+  repoMan: RepoMan;
 
-  constructor(options: Options) {
+  constructor(options: Options, repoMan: RepoMan) {
     this.state = new ConfigFile(Path.join(options.stateDirectory, 'state.json'))
     this.config = new ConfigFile(Path.join(options.stateDirectory, 'config.json'))
-    this.options = options
     this.utils = Utils
+    this.options = options
+    this.repoMan = repoMan
 
     // $FlowIgnore: Dirty patch but required
     this.run = this.run.bind(this)
   }
-  setCommands(commands: Object) {
-    this.commands = commands
-  }
   // eslint-disable-next-line
   run(...params: Array<any>) {
     throw new Error('Command::run() is unimplemented')
-  }
-  getCommands(): Object {
-    return this.commands
   }
   getProjectsRoot(): string {
     return Helpers.processPath(this.config.get('projectsRoot'))
@@ -191,9 +188,11 @@ export default class Command {
     projects.forEach(function(project) {
       configs = configs.concat(project.configurations)
     })
+    const getConfig = this.repoMan.commands.get('get-config')
+    invariant(getConfig, 'get-config command not found while updating configs')
 
     await Promise.all(
-      configs.map(config => this.commands['get-config'].run({ silent: true }, config))
+      configs.map(config => getConfig.run({ silent: true }, config))
     )
   }
   lastFolder(path: string) {
