@@ -3,7 +3,7 @@
 import FS from 'sb-fs'
 import Path from 'path'
 import Command from '../command'
-import { parseSourceURI, RepoManError } from '../helpers'
+import { parseSourceURI } from '../helpers'
 
 export default class GetConfigCommand extends Command {
   name = 'get-config <remote_path>'

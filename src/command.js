@@ -31,9 +31,6 @@ export default class Command {
     this.utils = Utils
     this.options = options
     this.repoMan = repoMan
-
-    // $FlowIgnore: Dirty patch but required
-    this.run = this.run.bind(this)
   }
   // eslint-disable-next-line
   run(...params: Array<any>) {
