@@ -33,7 +33,7 @@ class RepoMan {
     const namedCommands = this.getNamedCommands()
     this.commands.forEach(command => command.setCommands(namedCommands))
   }
-  getNamedCommands(): Object<string, Command> {
+  getNamedCommands(): Object {
     return this.commands.reduce((acc, cur) => ({
       ...acc,
       [cur.name.split(' ')[0]]: cur,

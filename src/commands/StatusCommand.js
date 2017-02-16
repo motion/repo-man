@@ -6,8 +6,9 @@ export default class StatusCommand extends Command {
   name = 'status'
   description = 'Get status of your projects'
 
-  async run(_) {
-    this.showNpm = !!Object.keys(_).filter(x => x === 'npm').length
+  showNpm: boolean;
+  async run(options: Object) {
+    this.showNpm = !!Object.keys(options).filter(x => x === 'npm').length
 
     const projectPaths = await this.getProjects()
     const projects = await Promise.all(
@@ -40,7 +41,7 @@ export default class StatusCommand extends Command {
   row = (content, props) => ({ content, ...props })
   crow = content => this.row(content, { hAlign: 'center' })
 
-  getRow = async (project:? Project) => {
+  getRow = async (project: Project) => {
     const { Color, Figure, Symbol, tildify } = this.utils
     const gray = Color.xterm(8)
     const repo = project.repository
@@ -63,8 +64,7 @@ export default class StatusCommand extends Command {
         version,
         path,
       ]
-    }
-    else {
+    } else {
       response = [
         `  ${project.name}`,
         this.crow(none),

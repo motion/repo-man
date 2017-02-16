@@ -1,3 +1,5 @@
+// @flow
+
 import { exec } from 'sb-exec'
 import type { GitState } from '../types'
 
@@ -34,6 +36,6 @@ export function parseGitStatus(output: string): GitState {
   }
 }
 
-export default function gitStatus(cwd) {
+export default function gitStatus(cwd: string) {
   return exec('git', ['status', '--porcelain', '-b'], { cwd }).then(parseGitStatus)
 }

@@ -11,7 +11,7 @@ export default class EjectCommand extends Command {
   name = 'eject [directories...]'
   description = 'Move files at path to to-org and track'
 
-  async run({ config }, ...list: Array<string>) {
+  async run({ config }: Object, ...list: Array<string>) {
     const directories = list || ['.']
     const { Color, Figure, tildify: tld } = this.utils
 
@@ -73,6 +73,6 @@ export default class EjectCommand extends Command {
       configFile.set('configurations', [finalConfig])
     }
 
-    return { sourceDir, targetDir }
+    return { sourceDir, targetDir, skipped: false }
   }
 }

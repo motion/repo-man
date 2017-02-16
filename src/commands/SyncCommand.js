@@ -12,6 +12,7 @@ const STATE = {
   SKIP: 1,
   PASS: 2,
   FAIL: 3,
+  EMPTY: 4,
 }
 
 export default class SyncCommand extends Command {
@@ -58,7 +59,7 @@ export default class SyncCommand extends Command {
       process.exitCode = 1
       this.log(new RepoManError('Unable to sync project dependencies'))
       this.log('Errors:')
-      this.log(errors.map(e => e.message).join('\n'))
+      this.log(errors.map(e => e.error.message).join('\n'))
     }
   }
 
@@ -78,7 +79,7 @@ export default class SyncCommand extends Command {
     [STATE.FAIL]: this.utils.Symbol.x,
   }
 
-  logStatuses(statuses: Object, persist: boolean) {
+  logStatuses(statuses: Object, persist: boolean = false) {
     const out = []
     Object.keys(statuses).forEach((path) => {
       const status = statuses[path]
@@ -134,7 +135,7 @@ export default class SyncCommand extends Command {
           }
           // NOTE: We do not overwrite in install, we overwrite in update
           await copy(configPath, project.path, {
-            filter: (source: string) => this.lastFolder(source) !== '.git',
+            filter: source => this.lastFolder(source) !== '.git',
             dotFiles: true,
             overwrite,
             failIfExists: false,

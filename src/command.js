@@ -21,7 +21,7 @@ export default class Command {
   config: ConfigFile;
   options: Options;
   description: string;
-  commands: Object<string, Command>;
+  commands: Object;
 
   constructor(options: Options) {
     this.state = new ConfigFile(Path.join(options.stateDirectory, 'state.json'))
@@ -32,14 +32,14 @@ export default class Command {
     // $FlowIgnore: Dirty patch but required
     this.run = this.run.bind(this)
   }
-  setCommands(commands: Object<string, Command>) {
+  setCommands(commands: Object) {
     this.commands = commands
   }
   // eslint-disable-next-line
   run(...params: Array<any>) {
     throw new Error('Command::run() is unimplemented')
   }
-  getCommands(): Object<string, Command> {
+  getCommands(): Object {
     return this.commands
   }
   getProjectsRoot(): string {
@@ -49,11 +49,12 @@ export default class Command {
     return Path.join(this.getProjectsRoot(), 'configs')
   }
   getConfigPath(parsed: ParsedRepo): string {
+    const subfolder = parsed.subfolder || ''
     return Path.join(...[
       this.getConfigsRoot(),
       parsed.username,
       parsed.repository,
-      parsed.subfolder,
+      subfolder,
     ].filter(x => !!x))
   }
   async ensureProjectsRoot(): Promise<void> {
@@ -116,10 +117,13 @@ export default class Command {
     }))
     return projects
   }
-  async getProjectDetails(path: string, npm: boolean): Promise<Project> {
+  async getProjectDetails(path: string, npm: boolean = false): Promise<Project> {
     const name = path.split(Path.sep).slice(-2).join('/')
     const configFilePath = Path.join(path, Helpers.CONFIG_FILE_NAME)
-    let config = {}
+    let config: Object = {
+      dependencies: [],
+      configurations: [],
+    }
 
     // get config from .repoman.json if exists
     if (await FS.exists(configFilePath)) {
@@ -143,7 +147,14 @@ export default class Command {
         ...await gitStatus(path),
       }
     } catch (e) {
-      return { path }
+      return {
+        path,
+        clean: true,
+        branchLocal: '',
+        branchRemote: '',
+        filesDirty: 0,
+        filesUntracked: 0,
+      }
     }
   }
   async getPackageInfo(path: string): Promise<?string> {
@@ -176,12 +187,10 @@ export default class Command {
     })
   }
   async updateConfigs(projects: Array<Project>): Promise<void> {
-    // flatten
-    const configs: Array<string> = [].concat([
-      ...projects
-        .filter(p => p.configurations && p.configurations.length)
-        .map(p => p.configurations)
-    ])
+    let configs: Array<string> = []
+    projects.forEach(function(project) {
+      configs = configs.concat(project.configurations)
+    })
 
     await Promise.all(
       configs.map(config => this.commands['get-config'].run({ silent: true }, config))
