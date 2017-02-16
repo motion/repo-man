@@ -17,7 +17,7 @@ export default class StatusCommand extends Command {
     )
 
     const titles = ['project', 'changes', 'branch', 'npm', 'path']
-      .map(c => this.utils.Color.xterm(247)(c))
+      .map(c => this.helpers.Color.xterm(247)(c))
     const head = [
       `  ${titles[0]}`,
       this.crow(titles[1]),
@@ -31,7 +31,7 @@ export default class StatusCommand extends Command {
     const columns = process.stdout.columns
     const getWidth = () => min(30, round((columns / head.length) * 0.9))
     const colWidths = head.map(getWidth)
-    const table = new this.utils.Table({ head, colWidths })
+    const table = new this.helpers.Table({ head, colWidths })
 
     // response
     table.from(await Promise.all(projects.map(project => this.getRow(project))))
@@ -42,7 +42,7 @@ export default class StatusCommand extends Command {
   crow = content => this.row(content, { hAlign: 'center' })
 
   async getRow(project: Project) {
-    const { Color, Figure, Symbol, tildify } = this.utils
+    const { Color, Figure, Symbol, tildify } = this.helpers
     const gray = Color.xterm(8)
     const repo = project.repository
     const isGit = typeof repo.clean !== 'undefined'

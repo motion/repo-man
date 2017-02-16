@@ -23,7 +23,7 @@ export default class SyncCommand extends Command {
 
   async run(_: Object, orgName: string) {
     // until we get flags, lets just prompt
-    const answer = await this.utils.prompt('Overwrite files on conflict?', ['no', 'yes'])
+    const answer = await this.helpers.prompt('Overwrite files on conflict?', ['no', 'yes'])
     const overwrite = answer === 'yes'
 
     const projectPaths = orgName
@@ -75,10 +75,10 @@ export default class SyncCommand extends Command {
   }
 
   statuses = {
-    [STATE.EMPTY]: this.utils.Symbol.dot,
-    [STATE.SKIP]: this.utils.Symbol.dot,
-    [STATE.PASS]: this.utils.Symbol.check,
-    [STATE.FAIL]: this.utils.Symbol.x,
+    [STATE.EMPTY]: this.helpers.Symbol.dot,
+    [STATE.SKIP]: this.helpers.Symbol.dot,
+    [STATE.PASS]: this.helpers.Symbol.check,
+    [STATE.FAIL]: this.helpers.Symbol.x,
   }
 
   logStatuses(statuses: Object, persist: boolean = false) {

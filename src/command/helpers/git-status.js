@@ -1,7 +1,7 @@
 // @flow
 
 import { exec } from 'sb-exec'
-import type { GitState } from '../types'
+import type { GitState } from '../../types'
 
 const REGEX_BRANCH_INFO = /^## (.*?)\.\.\.(.*)$/
 const REGEX_FILE_MODIFIED = /^ *M .*/

@@ -3,41 +3,43 @@
 import FS from 'sb-fs'
 import Path from 'path'
 import invariant from 'assert'
+import promisify from 'sb-promisify'
+import packageInfo from 'package-info'
+import expandTilde from 'expand-tilde'
 import ConfigFile from 'sb-config-file'
 import ChildProcess from 'child_process'
-import packageInfo from 'package-info'
-import promisify from 'sb-promisify'
-import gitStatus from './helpers/git-status'
-import * as Utils from './context-utils'
-import * as Helpers from './helpers'
-import type RepoMan from './'
-import type { Options, Project, Repository, Organization, ParsedRepo } from './types'
+
+import Helpers from './helpers'
+
+import { CONFIG_FILE_NAME, RepoManError } from '../helpers'
+import type RepoMan from '../'
+import type { Options, Project, Repository, Organization, ParsedRepo } from '../types'
 
 const getPackageInfo = promisify(packageInfo)
 
 export default class Command {
   name: string;
-  utils: Utils;
   state: ConfigFile;
   silent: boolean;
   config: ConfigFile;
   options: Options;
-  description: string;
+  helpers: typeof Helpers;
   repoMan: RepoMan;
+  description: string;
 
   constructor(options: Options, repoMan: RepoMan) {
     this.state = new ConfigFile(Path.join(options.stateDirectory, 'state.json'))
     this.config = new ConfigFile(Path.join(options.stateDirectory, 'config.json'))
-    this.utils = Utils
     this.options = options
     this.repoMan = repoMan
+    this.helpers = Helpers
   }
   // eslint-disable-next-line
   run(...params: Array<any>) {
     throw new Error('Command::run() is unimplemented')
   }
   getProjectsRoot(): string {
-    return Helpers.processPath(this.config.get('projectsRoot'))
+    return expandTilde(this.config.get('projectsRoot'))
   }
   getConfigsRoot(): string {
     return Path.join(this.getProjectsRoot(), 'configs')
@@ -113,7 +115,7 @@ export default class Command {
   }
   async getProjectDetails(path: string, npm: boolean = false): Promise<Project> {
     const name = path.split(Path.sep).slice(-2).join('/')
-    const configFilePath = Path.join(path, Helpers.CONFIG_FILE_NAME)
+    const configFilePath = Path.join(path, CONFIG_FILE_NAME)
     let config: Object = {
       dependencies: [],
       configurations: [],
@@ -138,7 +140,7 @@ export default class Command {
     try {
       return {
         path,
-        ...await gitStatus(path),
+        ...await Helpers.gitStatus(path),
       }
     } catch (e) {
       return {
@@ -204,6 +206,6 @@ export default class Command {
     console.log('')
   }
   error(value: string) {
-    throw new Helpers.RepoManError(value)
+    throw new RepoManError(value)
   }
 }
