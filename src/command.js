@@ -86,7 +86,7 @@ export default class Command {
   }
   async getOrganization(name: string): Promise<Organization> {
     const organizations = await this.getOrganizations()
-    const index = organizations.findIndex(org => this.lastFolder(org.path) === name)
+    const index = organizations.findIndex(org => Path.basename(org.path) === name)
     if (index === -1) {
       this.error(`No organization found: ${name}`)
     }
@@ -188,18 +188,11 @@ export default class Command {
     projects.forEach(function(project) {
       configs = configs.concat(project.configurations)
     })
-    const getConfig = this.repoMan.commands.get('get-config')
-    invariant(getConfig, 'get-config command not found while updating configs')
+    const commandGetConfig = this.repoMan.commands.get('get-config')
+    invariant(commandGetConfig, 'get-config command not found while updating configs')
 
-    await Promise.all(
-      configs.map(config => getConfig.run({ silent: true }, config))
-    )
+    await Promise.all(configs.map(config => commandGetConfig.run({ silent: true }, config)))
   }
-  lastFolder(path: string) {
-    const list = path.split(Path.sep)
-    return list[list.length - 1]
-  }
-
   log(text: any) {
     if (this.silent) {
       return

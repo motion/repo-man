@@ -3,6 +3,8 @@
 import FS from 'sb-fs'
 import Path from 'path'
 import copy from 'sb-copy'
+import invariant from 'assert'
+
 import Command from '../command'
 import { parseSourceURI, RepoManError } from '../helpers'
 import type { Project } from '../types'
@@ -48,7 +50,7 @@ export default class SyncCommand extends Command {
     // update project config files // TODO add flag
     await this.updateConfigs(projects)
 
-    await Promise.all(projects.map((project) =>
+    await Promise.all(projects.map(project =>
       this.syncRepo(project, overwrite, handleStatus, handleError)
     ))
 
@@ -83,7 +85,7 @@ export default class SyncCommand extends Command {
     const out = []
     Object.keys(statuses).forEach((path) => {
       const status = statuses[path]
-      out.push(` ${this.statuses[status]} ${this.lastFolder(path)}`)
+      out.push(` ${this.statuses[status]} ${Path.basename(path)}`)
     })
     // clear screen
     process.stdout.write('\u001B[2J\u001B[0;0f')
@@ -99,6 +101,11 @@ export default class SyncCommand extends Command {
       onStatus(project, STATE.FAIL)
     }
     const projectsRoot = await this.getProjectsRoot()
+    const commandGet = this.repoMan.commands.get('get')
+    const commandGetConfig = this.repoMan.commands.get('get-config')
+
+    invariant(commandGet, 'get command not found when syncing repo')
+    invariant(commandGetConfig, 'get-config command not found when syncing repo')
 
     // Dependencies
     const dependencies = []
@@ -116,7 +123,7 @@ export default class SyncCommand extends Command {
       }
       for (const dependency of dependencies) {
         try {
-          await this.commands.get.run({}, dependency)
+          await commandGet.run({}, dependency)
         } catch (error) {
           onError(error)
         }
@@ -131,11 +138,11 @@ export default class SyncCommand extends Command {
         try {
           const configPath = this.getConfigPath(parseSourceURI(entry))
           if (!await FS.exists(configPath)) {
-            await this.commands['get-config'].run({ silent: true }, entry)
+            await commandGetConfig.run({ silent: true }, entry)
           }
           // NOTE: We do not overwrite in install, we overwrite in update
           await copy(configPath, project.path, {
-            filter: source => this.lastFolder(source) !== '.git',
+            filter: source => Path.basename(source) !== '.git',
             dotFiles: true,
             overwrite,
             failIfExists: false,
