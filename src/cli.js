@@ -43,6 +43,10 @@ RepoMan.get().then(function(repoMan) {
   // Run it
   const processed = command.parse(process.argv, true)
 
+  // Options for exec
+  command.option('--scope <packages>', 'Comma separated list of packages to execute in')
+  command.option('--ignore <packages>', 'Comma separated list of packages to ignore in')
+
   if (processed.errorMessage) {
     console.log('Error:', processed.errorMessage)
   }

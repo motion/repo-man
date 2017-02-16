@@ -53,6 +53,23 @@ export default class Command {
       subfolder,
     ].filter(x => !!x))
   }
+  matchProjects(projects: Array<string>, queries: Array<string>): Array<string> {
+    return projects.filter((project: string) => {
+      const projectBase = Path.basename(project)
+      const projectName = project.split(Path.sep).slice(-2).join(Path.sep)
+
+      for (let i = 0, length = queries.length; i < length; i++) {
+        const query = queries[i]
+        const chunks = query.split('/')
+        if (chunks.length === 1 && projectBase === query) {
+          return true
+        } else if (chunks.length === 2 && projectName === query) {
+          return true
+        }
+      }
+      return false
+    })
+  }
   async ensureProjectsRoot(): Promise<void> {
     await FS.mkdirp(this.getProjectsRoot())
   }
