@@ -1,3 +1,5 @@
+// @flow
+
 import Command from '../command'
 
 export default class InitCommand extends Command {

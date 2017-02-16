@@ -14,51 +14,32 @@ const PRIVATE = {}
 
 class RepoMan {
   options: Options;
-  commands: Array<Command>;
+  commands: Map<string, Command>;
   constructor(something: Object, options: Options) {
     if (something !== PRIVATE) {
       throw new Error('Invalid invocation of new RepoMan() use RepoMan.create() instead')
     }
     this.options = options
-    this.commands = []
-    this.addCommand(Commands.Get, options)
-    this.addCommand(Commands.GetConfig, options)
-    this.addCommand(Commands.Status, options)
-    this.addCommand(Commands.Sync, options)
-    this.addCommand(Commands.Eject, options)
-    this.addCommand(Commands.Init, options)
-    this.addCommand(Commands.Exec, options)
+    this.commands = new Map()
 
-    // allow commands to reference each other
-    const namedCommands = this.getNamedCommands()
-    this.commands.forEach(command => command.setCommands(namedCommands))
-  }
-  getNamedCommands(): Object {
-    return this.commands.reduce((acc, cur) => ({
-      ...acc,
-      [cur.name.split(' ')[0]]: cur,
-    }), {})
+    Commands.forEach((command) => {
+      this.addCommand(command, options)
+    })
   }
   getCommands(): Array<Command> {
-    return this.commands
+    return Array.from(this.commands.values())
   }
   addCommand(Entry: Class<Command>, options: Options) {
     // initialize command class
+    invariant(typeof Entry.prototype.name === 'string', 'name must be a string')
+    invariant(typeof Entry.prototype.description === 'string', 'description must be a string')
+    invariant(typeof Entry.prototype.run === 'function', 'run must be a function')
     const command = new Entry(options)
-    invariant(typeof command.name === 'string', 'name must be a string')
-    invariant(typeof command.description === 'string', 'description must be a string')
-    invariant(typeof command.run === 'function', 'run must be a function')
     this.removeCommand(command.name)
-    this.commands.push(command)
+    this.commands.set(command.name, command)
   }
-  removeCommand(name: string, run: ?Function = null) {
-    let i = this.commands.length
-    while (i--) {
-      const entry = this.commands[i]
-      if (entry.name === name && (!run || entry.run === run)) {
-        this.commands.splice(i, 1)
-      }
-    }
+  removeCommand(name: string) {
+    this.commands.delete(name)
   }
   // NOTE: All class methods should be ABOVE this method
   static async get(givenOptions: Object = {}): Promise<RepoMan> {

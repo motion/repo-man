@@ -1,4 +1,5 @@
 // @flow
+
 import Command from '../command'
 import type { Project } from '../types'
 
