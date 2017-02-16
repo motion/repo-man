@@ -28,12 +28,13 @@ export default class Table {
   constructor(options) {
     this.table = new CLITable({ ...DEFAULT_STYLE, ...options })
   }
-
   push(...args) {
     return this.table.push(...args)
   }
-
-  print() {
+  from(arr: Array<any>): void {
+    arr.forEach(entry => this.push(entry))
+  }
+  show() {
     return this.table.toString()
   }
 }

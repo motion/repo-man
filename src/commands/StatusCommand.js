@@ -34,9 +34,8 @@ export default class StatusCommand extends Command {
     const table = new this.utils.Table({ head, colWidths })
 
     // response
-    const final = await Promise.all(projects.map(this.getRow))
-    final.forEach(r => table.push(r))
-    this.log(table.print())
+    table.from(await Promise.all(projects.map(project => this.getRow(project))))
+    this.log(table.show())
   }
 
   row = (content, props) => ({ content, ...props })
@@ -63,7 +62,7 @@ export default class StatusCommand extends Command {
         this.crow(numChanged || none),
         `${Color.yellow(repo.branchLocal)} ${gray(Figure.arrowRight)} ${repo.branchRemote}`,
         version,
-        path,
+        tildify(path),
       ]
     } else {
       response = [
@@ -71,7 +70,7 @@ export default class StatusCommand extends Command {
         this.crow(none),
         this.crow(none),
         version,
-        path,
+        tildify(path),
       ]
     }
     return response.filter(x => !!x)

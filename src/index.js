@@ -29,10 +29,10 @@ class RepoMan {
   }
   addCommand(Entry: Class<Command>, options: Options) {
     // initialize command class
-    invariant(typeof Entry.prototype.name === 'string', 'name must be a string')
-    invariant(typeof Entry.prototype.description === 'string', 'description must be a string')
-    invariant(typeof Entry.prototype.run === 'function', 'run must be a function')
     const command = new Entry(options, this)
+    invariant(typeof command.name === 'string', 'name must be a string')
+    invariant(typeof command.description === 'string', 'description must be a string')
+    invariant(typeof command.run === 'function', 'run must be a function')
     this.removeCommand(command.name)
     this.commands.set(command.name, command)
   }
