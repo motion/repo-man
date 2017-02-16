@@ -32,7 +32,7 @@ export default class EjectCommand extends Command {
     this.log('👍')
     this.log(`${directories.join(' ')}`)
   }
-  eject = async (config: string, directory: string) => {
+  async eject(config: string, directory: string) {
     const { Color, tildify, prompt } = this.utils
 
     const sourceDir = Path.resolve(directory)

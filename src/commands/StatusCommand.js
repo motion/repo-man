@@ -42,7 +42,7 @@ export default class StatusCommand extends Command {
   row = (content, props) => ({ content, ...props })
   crow = content => this.row(content, { hAlign: 'center' })
 
-  getRow = async (project: Project) => {
+  async getRow(project: Project) {
     const { Color, Figure, Symbol, tildify } = this.utils
     const gray = Color.xterm(8)
     const repo = project.repository

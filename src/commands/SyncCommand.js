@@ -65,7 +65,7 @@ export default class SyncCommand extends Command {
     }
   }
 
-  getCurrentProject = async () => {
+  async getCurrentProject() {
     // current folder
     const currentProjectPath = await this.getCurrentProjectPath()
     if (!currentProjectPath) {

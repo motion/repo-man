@@ -22,9 +22,7 @@ class RepoMan {
     this.options = options
     this.commands = new Map()
 
-    Commands.forEach((command) => {
-      this.addCommand(command, options)
-    })
+    Commands.forEach((command) => { this.addCommand(command, options) })
   }
   getCommands(): Array<Command> {
     return Array.from(this.commands.values())
