@@ -6,12 +6,10 @@ export default function parallel(title: string, tasks: Array<{ title: string, ca
   const listr = new Listr([{
     title,
     task() {
-      return new Listr(tasks.map(function(task) {
-        return {
-          title: task.title,
-          task: task.callback,
-        }
-      }), { concurrent: true })
+      return new Listr(tasks.map(task => ({
+        title: task.title,
+        task: task.callback,
+      })), { concurrent: true })
     },
   }])
   return listr.run()
