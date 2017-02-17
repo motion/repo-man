@@ -2,7 +2,7 @@
 
 import Command from '../command'
 
-export default class InitCommand extends Command {
+export default class ExecCommand extends Command {
   name = 'exec <command> [parameters...]'
   description = 'Run command in all repos'
 

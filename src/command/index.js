@@ -185,7 +185,7 @@ export default class Command {
       return null
     }
   }
-  async spawn(name: string, parameters: Array<string>, options: Object, onStdout: ?((chunk: string) => any), onStderr: ?((chunk: string) => any)) {
+  async spawn(name: string, parameters: Array<string>, options: Object, onStdout: ?((chunk: string) => any), onStderr: ?((chunk: string) => any)): Promise<number> {
     return new Promise((resolve, reject) => {
       const spawned = ChildProcess.spawn(name, parameters, options)
       if (onStdout) {
