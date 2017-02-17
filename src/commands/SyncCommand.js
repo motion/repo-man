@@ -52,7 +52,7 @@ export default class SyncCommand extends Command {
     projects.forEach(function(project) {
       configs = configs.concat(project.configurations)
     })
-    const commandGetConfig = this.repoMan.commands.get('get-config')
+    const commandGetConfig = this.repoMan.getCommand('get-config')
     invariant(commandGetConfig, 'get-config command not found while updating configs')
 
     await Promise.all(configs.map(config => commandGetConfig.run({ silent: true }, config)))
@@ -99,8 +99,8 @@ export default class SyncCommand extends Command {
       onStatus(project, STATE.FAIL)
     }
     const projectsRoot = await this.getProjectsRoot()
-    const commandGet = this.repoMan.commands.get('get')
-    const commandGetConfig = this.repoMan.commands.get('get-config')
+    const commandGet = this.repoMan.getCommand('get')
+    const commandGetConfig = this.repoMan.getCommand('get-config')
 
     invariant(commandGet, 'get command not found when syncing repo')
     invariant(commandGetConfig, 'get-config command not found when syncing repo')
