@@ -48,7 +48,14 @@ export default class SyncCommand extends Command {
     // run syncs
     const projects = await Promise.all(projectPaths.map(project => this.getProjectDetails(project)))
     // update project config files // TODO add flag
-    await this.updateConfigs(projects)
+    let configs: Array<string> = []
+    projects.forEach(function(project) {
+      configs = configs.concat(project.configurations)
+    })
+    const commandGetConfig = this.repoMan.commands.get('get-config')
+    invariant(commandGetConfig, 'get-config command not found while updating configs')
+
+    await Promise.all(configs.map(config => commandGetConfig.run({ silent: true }, config)))
 
     await Promise.all(projects.map(project =>
       this.syncRepo(project, overwrite, handleStatus, handleError)
