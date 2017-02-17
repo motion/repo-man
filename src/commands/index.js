@@ -7,6 +7,7 @@ import Sync from './SyncCommand'
 import Eject from './EjectCommand'
 import Init from './InitCommand'
 import Exec from './ExecCommand'
+import Publish from './PublishCommand'
 
 export default [
   Get,
@@ -16,4 +17,5 @@ export default [
   Eject,
   Init,
   Exec,
+  Publish,
 ]
