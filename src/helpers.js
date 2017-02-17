@@ -15,6 +15,7 @@ export const BUILTIN_COMMANDS = new Set([
   'publish',
   'eject',
   'init',
+  'link',
 ])
 
 export class RepoManError extends Error {
