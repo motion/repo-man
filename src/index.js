@@ -27,6 +27,14 @@ class RepoMan {
   getCommands(): Array<Command> {
     return Array.from(this.commands.values())
   }
+  getCommand(name: string): ?Command {
+    for (const [commandName, command] of this.commands) {
+      if (commandName.split(' ')[0] === name) {
+        return command
+      }
+    }
+    return null
+  }
   addCommand(Entry: Class<Command>, options: Options) {
     // initialize command class
     const command = new Entry(options, this)

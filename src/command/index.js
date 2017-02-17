@@ -2,7 +2,6 @@
 
 import FS from 'sb-fs'
 import Path from 'path'
-import invariant from 'assert'
 import promisify from 'sb-promisify'
 import packageInfo from 'package-info'
 import expandTilde from 'expand-tilde'
@@ -103,7 +102,7 @@ export default class Command {
     const organizations = await this.getOrganizations()
     const index = organizations.findIndex(org => Path.basename(org.path) === name)
     if (index === -1) {
-      this.error(`No organization found: ${name}`)
+      this.error(`Organization not found: ${name}`)
     }
     return organizations[index]
   }
@@ -197,16 +196,6 @@ export default class Command {
       spawned.on('close', resolve)
       spawned.on('error', reject)
     })
-  }
-  async updateConfigs(projects: Array<Project>): Promise<void> {
-    let configs: Array<string> = []
-    projects.forEach(function(project) {
-      configs = configs.concat(project.configurations)
-    })
-    const commandGetConfig = this.repoMan.commands.get('get-config')
-    invariant(commandGetConfig, 'get-config command not found while updating configs')
-
-    await Promise.all(configs.map(config => commandGetConfig.run({ silent: true }, config)))
   }
   log(text: any) {
     if (this.silent) {
