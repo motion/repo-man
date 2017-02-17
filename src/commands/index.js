@@ -8,6 +8,7 @@ import Eject from './EjectCommand'
 import Init from './InitCommand'
 import Exec from './ExecCommand'
 import Publish from './PublishCommand'
+import Link from './LinkCommand'
 
 export default [
   Get,
@@ -18,4 +19,5 @@ export default [
   Init,
   Exec,
   Publish,
+  Link,
 ]
