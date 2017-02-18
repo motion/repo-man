@@ -87,9 +87,12 @@ export default class PublishCommand extends Command {
             }
           }
           if (script) {
-            await this.spawn(process.env.SHELL || 'sh', [script], {
+            await this.spawn(process.env.SHELL || 'sh', ['-c', `cd "${project.path}"; ${script}`], {
               cwd: project.path,
-              stdio: ['ignore', 'ignore', 'inherit'],
+              stdio: ['inherit', 'ignore', 'inherit'],
+              env: Object.assign({}, process.env, {
+                PATH: [process.env.PATH, Path.join(project.path, 'node_modules', '.bin')].join(Path.delimiter),
+              }),
             })
           }
         },
@@ -112,7 +115,7 @@ export default class PublishCommand extends Command {
             return
           }
           await this.spawn('npm', ['publish'], {
-            cwd: project,
+            cwd: project.path,
             stdio: ['ignore', 'ignore', 'inherit'],
           })
         },
@@ -129,7 +132,7 @@ export default class PublishCommand extends Command {
         callback: async () => {
           await this.spawn('git', ['push', '-u', 'origin', 'HEAD', '--follow-tags'], {
             cwd: project.path,
-            stdio: ['ignore', 'ignore', 'inherit'],
+            stdio: ['ignore', 'ignore', 'ignore'],
           })
         },
       })))
