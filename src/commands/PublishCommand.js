@@ -1,5 +1,8 @@
 // @flow
+/* eslint-disable global-require */
 
+import FS from 'sb-fs'
+import Path from 'path'
 import Command from '../command'
 
 export default class PublishCommand extends Command {
@@ -7,61 +10,132 @@ export default class PublishCommand extends Command {
   description = 'Publish repos (supports --scope and --ignore)'
 
   async run(options: Object, bumpType: string) {
-    let projects = await this.getProjects()
-    const changedProjects = []
-
+    let projectPaths = await this.getProjects()
     if (options.scope) {
-      projects = this.matchProjects(projects, options.scope.split(',').filter(i => i))
+      projectPaths = this.matchProjects(projectPaths, options.scope.split(',').filter(i => i))
     }
     if (options.ignore) {
-      const ignored = this.matchProjects(projects, options.ignore.split(',').filter(i => i))
-      projects = projects.filter(i => ignored.indexOf(i) === -1)
+      const ignored = this.matchProjects(projectPaths, options.ignore.split(',').filter(i => i))
+      projectPaths = projectPaths.filter(i => ignored.indexOf(i) === -1)
     }
 
-    let foundDirty = false
-    for (const project of projects) {
-      const details = await this.getProjectDetails(project)
-      if (!details.repository.clean) {
-        foundDirty = true
-        this.log(`Project has uncommited changes: ${this.helpers.tildify(project)}`)
-      }
-      let lastTag = ''
-      const tagExitCode = await this.spawn('git', ['describe', '--tags', '--abbrev=0'], {
-        cwd: project,
-        stdio: ['pipe', 'pipe', 'inherit'],
-      }, (chunk) => { lastTag = chunk.toString().trim() })
-      if (tagExitCode === 0) {
-        // Non-zero code means no tag yet
-        let changes = ''
-        const diffExitCode = await this.spawn('git', ['diff', `${lastTag}...HEAD`], {
-          cwd: project,
-          stdio: ['pipe', 'pipe', 'inherit'],
-        }, (chunk) => { changes += chunk.toString().trim() })
-        if (diffExitCode !== 0 || changes.length) {
-          changedProjects.push(project)
+    const projectsFiltered = []
+    const projects = await Promise.all(projectPaths.map(project => this.getProjectDetails(project)))
+    await this.helpers.parallel('Filtering projects', projects.map(project => ({
+      title: project.name,
+      async callback() {
+        const manifestPath = Path.join(project.path, 'package.json')
+        if (!await FS.exists(manifestPath)) {
+          return
         }
-      } else {
-        changedProjects.push(project)
-      }
-    }
-    if (foundDirty) {
-      process.exitCode = 1
+        // $FlowIgnore: We have to.
+        const manifest = require(manifestPath)
+        if (manifest && manifest.version && manifest.name && !manifest.private) {
+          projectsFiltered.push(project)
+        }
+      },
+    })))
+
+    const projectsToPublish = []
+    try {
+      await this.helpers.parallel('Preparing to publish', projectsFiltered.map(project => ({
+        title: project.name,
+        // eslint-disable-next-line
+        callback: async () => {
+          if (!project.repository.clean) {
+            throw new Error(`Project has uncommited changes: ${this.helpers.tildify(project.path)}`)
+          }
+          let lastTag = ''
+          const tagExitCode = await this.spawn('git', ['describe', '--tags', '--abbrev=0'], {
+            cwd: project,
+            stdio: ['pipe', 'pipe', 'ignore'],
+          }, (chunk) => { lastTag = chunk.toString().trim() })
+          if (!lastTag || tagExitCode !== 0) {
+            projectsToPublish.push(project)
+            return
+          }
+          let changes = ''
+          const diffExitCode = await this.spawn('git', ['diff', `${lastTag}...HEAD`], {
+            cwd: project,
+            stdio: ['pipe', 'pipe', 'inherit'],
+          }, (chunk) => { changes += chunk.toString().trim() })
+          if (diffExitCode !== 0 || changes.length) {
+            projectsToPublish.push(project)
+          }
+        },
+      })))
+    } catch (_) {
+      // Ignore because taskr already logged it to console
       return
     }
 
-    console.log('These repos have been changed since last release:', changedProjects.map(this.helpers.tildify).join(', '))
-    for (const project of changedProjects) {
-      const versionExitCode = await this.spawn('npm', ['version', bumpType], {
-        cwd: project,
-        stdio: ['inherit', 'inherit', 'inherit'],
-      })
-      if (versionExitCode !== 0) {
-        continue
-      }
-      await this.spawn('npm', ['publish'], {
-        cwd: project,
-        stdio: ['inherit', 'inherit', 'inherit'],
-      })
+    try {
+      await this.helpers.parallel('Executing prepublish scripts', projectsFiltered.map(project => ({
+        title: project.name,
+        // eslint-disable-next-line
+        callback: async () => {
+          let script
+          // $FlowIgnore: Sorry flow
+          const manifest = require(Path.join(project.path, 'package.json'))
+          if (manifest.scripts) {
+            if (manifest.scripts.prepublish) {
+              script = manifest.scripts.prepublish
+            } else if (manifest.scripts.build) {
+              script = manifest.scripts.build
+            } else if (manifest.scripts.compile) {
+              script = manifest.scripts.compile
+            }
+          }
+          if (script) {
+            await this.spawn(process.env.SHELL || 'sh', [script], {
+              cwd: project.path,
+              stdio: ['ignore', 'ignore', 'inherit'],
+            })
+          }
+        },
+      })))
+    } catch (_) {
+      // Ignore because taskr already logged it to console
+      return
+    }
+
+    try {
+      await this.helpers.parallel('Publishing to NPM', projectsFiltered.map(project => ({
+        title: project.name,
+        // eslint-disable-next-line
+        callback: async () => {
+          const versionExitCode = await this.spawn('npm', ['version', bumpType], {
+            cwd: project.path,
+            stdio: ['ignore', 'ignore', 'inherit'],
+          })
+          if (versionExitCode !== 0) {
+            return
+          }
+          await this.spawn('npm', ['publish'], {
+            cwd: project,
+            stdio: ['ignore', 'ignore', 'inherit'],
+          })
+        },
+      })))
+    } catch (_) {
+      // Ignore because taskr already logged it to console
+      return
+    }
+
+    try {
+      await this.helpers.parallel('Pushing to git remote', projectsFiltered.map(project => ({
+        title: project.name,
+        // eslint-disable-next-line
+        callback: async () => {
+          await this.spawn('git', ['push', '-u', 'origin', 'HEAD', '--follow-tags'], {
+            cwd: project.path,
+            stdio: ['ignore', 'ignore', 'inherit'],
+          })
+        },
+      })))
+    } catch (_) {
+      // Ignore because taskr already logged it to console
+      return
     }
   }
 }
