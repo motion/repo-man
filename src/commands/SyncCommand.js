@@ -19,10 +19,10 @@ export default class SyncCommand extends Command {
     const overwrite = await this.helpers.prompt('Overwrite files on conflict?', ['no', 'yes']) === 'yes'
     const projects = await Promise.all(projectPaths.map(path => this.getProjectDetails(path)))
     const commandGet = this.repoMan.getCommand('get')
-    const commandGetConfig = this.repoMan.getCommand('get-config')
+    const commandGetConfig = this.repoMan.getCommand('get.config')
     const projectsRoot = await this.getProjectsRoot()
     invariant(commandGet, 'get command not found when syncing repo')
-    invariant(commandGetConfig, 'get-config command not found when syncing repo')
+    invariant(commandGetConfig, 'get.config command not found when syncing repo')
 
     // update all configuration repos
     const configs = uniq(flatten(projects.map(project => project.configurations)))
