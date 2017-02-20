@@ -5,16 +5,16 @@ import FS from 'sb-fs'
 import Path from 'path'
 import copy from 'sb-copy'
 import invariant from 'assert'
+import { uniq, flatten } from 'lodash'
 import { Observable } from 'rxjs/Observable'
 import Command from '../command'
 import { parseSourceURI } from '../helpers'
-import { uniq, flatten } from 'lodash'
 
 export default class SyncCommand extends Command {
   name = 'sync [org]'
   description = 'Sync configuration for projects, defaults to just current folder'
 
-  run = async (options: Object, orgName: string) => {
+  async run(options: Object, orgName: string) {
     const projectPaths = orgName ? await this.getProjects(orgName) : [await this.getCurrentProjectPath()]
     const overwrite = await this.helpers.prompt('Overwrite files on conflict?', ['no', 'yes']) === 'yes'
     const projects = await Promise.all(projectPaths.map(path => this.getProjectDetails(path)))
