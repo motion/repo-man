@@ -19,7 +19,7 @@ export type NpmInfo = {
   description: string,
 }
 
-export type Project = {
+export type ProjectInfo = {
   name: string,
   path: string,
   npm: NpmInfo,

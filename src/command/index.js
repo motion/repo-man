@@ -12,7 +12,7 @@ import Helpers from './helpers'
 
 import { CONFIG_FILE_NAME, RepoManError } from '../helpers'
 import type RepoMan from '../'
-import type { Options, Project, GitState, Organization, ParsedRepo } from '../types'
+import type { Options, ProjectInfo, GitState, Organization, ParsedRepo } from '../types'
 
 const getPackageInfo = promisify(packageInfo)
 
@@ -83,8 +83,12 @@ export default class Command {
     const entries = await FS.readdir(projectsRoot)
     await Promise.all(entries.map(async function(entry) {
       const path = Path.join(projectsRoot, entry)
+      if (path.substr(0, 1) === '.') {
+        // Ignore dot files
+        return true
+      }
       const stat = await FS.lstat(path)
-      if (stat.isDirectory() && entry !== 'configs') {
+      if (stat.isDirectory()) {
         organizations.push({ name: entry, path })
       }
       return true
@@ -93,21 +97,15 @@ export default class Command {
   }
   async getOrganization(name: string): Promise<Organization> {
     const organizations = await this.getOrganizations()
-    const index = organizations.findIndex(org => Path.basename(org.path) === name)
-    if (index === -1) {
-      this.error(`Organization not found: ${name}`)
+    const index = organizations.findIndex(org => org.name === name)
+    if (index !== -1) {
+      return organizations[index]
     }
-    return organizations[index]
+    throw new RepoManError(`Organization not found: ${name}`)
   }
-  async getProjects(orgName?: string): Promise<Array<string>> {
+  async getProjects(organization: ?string = null): Promise<Array<string>> {
     const projects = []
-    let organizations = []
-    // allow finding for specific organization
-    if (orgName) {
-      organizations = [await this.getOrganization(orgName)]
-    } else {
-      organizations = await this.getOrganizations()
-    }
+    const organizations = organization ? [await this.getOrganization(organization)] : await this.getOrganizations()
     await Promise.all(organizations.map(async function({ path }) {
       const items = await FS.readdir(path)
       for (const item of items) {
@@ -117,11 +115,11 @@ export default class Command {
           projects.push(itemPath)
         }
       }
-      return null
+      return true
     }))
     return projects
   }
-  async getProjectDetails(path: string, npm: boolean = false): Promise<Project> {
+  async getProjectDetails(path: string, npm: boolean = false): Promise<ProjectInfo> {
     const name = path.split(Path.sep).slice(-2).join('/')
     const configFilePath = Path.join(path, CONFIG_FILE_NAME)
     let config: Object = {
