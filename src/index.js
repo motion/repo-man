@@ -59,6 +59,7 @@ class RepoMan {
     const repoMan = new RepoMan(PRIVATE, options)
     const command = new Command(options, repoMan)
     await FS.mkdirp(command.getProjectsRoot())
+    await FS.mkdirp(command.getConfigsRoot())
     return repoMan
   }
 }

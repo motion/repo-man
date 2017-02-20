@@ -41,7 +41,7 @@ export default class Command {
     return expandTilde(this.config.get('projectsRoot'))
   }
   getConfigsRoot(): string {
-    return Path.join(this.getProjectsRoot(), 'configs')
+    return Path.join(this.getProjectsRoot(), '.config')
   }
   getConfigPath(parsed: ParsedRepo): string {
     return Path.join(
@@ -65,7 +65,7 @@ export default class Command {
       return queries.some(query => (query.indexOf('/') === -1 ? query === projectBase : query === projectSlug))
     })
   }
-  async getCurrentProjectPath(): Promise<string> {
+  async getCurrentProject(): Promise<string> {
     const currentDirectory = process.cwd()
     const projectsRoot = this.getProjectsRoot()
     const rootIndex = currentDirectory.indexOf(projectsRoot)
