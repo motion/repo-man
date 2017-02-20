@@ -12,7 +12,7 @@ import Helpers from './helpers'
 
 import { CONFIG_FILE_NAME, RepoManError } from '../helpers'
 import type RepoMan from '../'
-import type { Options, ProjectInfo, GitState, Organization, ParsedRepo } from '../types'
+import type { Options, Project, ProjectState, GitState, Organization, ParsedRepo } from '../types'
 
 const getPackageInfo = promisify(packageInfo)
 
@@ -58,12 +58,8 @@ export default class Command {
       parsed.repository,
     )
   }
-  matchProjects(projects: Array<string>, queries: Array<string>): Array<string> {
-    return projects.filter((project: string) => {
-      const projectBase = Path.basename(project)
-      const projectSlug = project.split(Path.sep).slice(-2).join(Path.sep)
-      return queries.some(query => (query.indexOf('/') === -1 ? query === projectBase : query === projectSlug))
-    })
+  matchProjects(projects: Array<Project>, queries: Array<string>): Array<Project> {
+    return projects.filter(project => queries.some(query => (query.indexOf('/') === -1 ? query === project.name : query === `${project.org}/${project.name}`)))
   }
   async getCurrentProject(): Promise<string> {
     const currentDirectory = process.cwd()
@@ -103,7 +99,7 @@ export default class Command {
     }
     throw new RepoManError(`Organization not found: ${name}`)
   }
-  async getProjects(organization: ?string = null): Promise<Array<string>> {
+  async getProjects(organization: ?string = null): Promise<Array<Project>> {
     const projects = []
     const organizations = organization ? [await this.getOrganization(organization)] : await this.getOrganizations()
     await Promise.all(organizations.map(async function({ path }) {
@@ -112,14 +108,14 @@ export default class Command {
         const itemPath = Path.join(path, item)
         const stat = await FS.lstat(itemPath)
         if (stat.isDirectory()) {
-          projects.push(itemPath)
+          projects.push({ path: itemPath, name: item, org: Path.basename(path) })
         }
       }
       return true
     }))
     return projects
   }
-  async getProjectDetails(path: string, npm: boolean = false): Promise<ProjectInfo> {
+  async getProjectDetails(path: string, npm: boolean = false): Promise<ProjectState> {
     const name = path.split(Path.sep).slice(-2).join('/')
     const configFilePath = Path.join(path, CONFIG_FILE_NAME)
     let config: Object = {

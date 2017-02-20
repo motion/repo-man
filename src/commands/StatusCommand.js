@@ -1,7 +1,7 @@
 // @flow
 
 import Command from '../command'
-import type { ProjectInfo } from '../types'
+import type { ProjectState } from '../types'
 
 export default class StatusCommand extends Command {
   name = 'status'
@@ -41,7 +41,7 @@ export default class StatusCommand extends Command {
   row = (content, props) => ({ content, ...props })
   crow = content => this.row(content, { hAlign: 'center' })
 
-  async getRow(project: ProjectInfo) {
+  async getRow(project: ProjectState) {
     const { Color, Figure, Symbol, tildify } = this.helpers
     const gray = Color.xterm(8)
     const repo = project.repository
