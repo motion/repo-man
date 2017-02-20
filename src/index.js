@@ -5,9 +5,9 @@ import Path from 'path'
 import copy from 'sb-copy'
 import invariant from 'assert'
 
+import Command from './command'
 import Commands from './commands'
 import * as Helpers from './helpers'
-import type Command from './command'
 import type { Options } from './types'
 
 const PRIVATE = {}
@@ -56,7 +56,10 @@ class RepoMan {
       failIfExists: false,
     })
 
-    return new RepoMan(PRIVATE, options)
+    const repoMan = new RepoMan(PRIVATE, options)
+    const command = new Command(options, repoMan)
+    await FS.mkdirp(command.getProjectsRoot())
+    return repoMan
   }
 }
 

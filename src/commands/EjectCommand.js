@@ -15,7 +15,6 @@ export default class EjectCommand extends Command {
     const directories = list || ['.']
     const { Color, Figure, tildify: tld } = this.helpers
 
-    await this.ensureProjectsRoot()
     const ejects = []
     for (const dir of directories) {
       ejects.push(

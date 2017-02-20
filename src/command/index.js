@@ -44,33 +44,26 @@ export default class Command {
     return Path.join(this.getProjectsRoot(), 'configs')
   }
   getConfigPath(parsed: ParsedRepo): string {
-    const subfolder = parsed.subfolder || ''
-    return Path.join(...[
+    return Path.join(
       this.getConfigsRoot(),
       parsed.username,
       parsed.repository,
-      subfolder,
-    ].filter(x => !!x))
+      parsed.subfolder || '',
+    )
+  }
+  getProjectPath(parsed: ParsedRepo): string {
+    return Path.join(
+      this.getProjectsRoot(),
+      parsed.username,
+      parsed.repository,
+    )
   }
   matchProjects(projects: Array<string>, queries: Array<string>): Array<string> {
     return projects.filter((project: string) => {
       const projectBase = Path.basename(project)
-      const projectName = project.split(Path.sep).slice(-2).join(Path.sep)
-
-      for (let i = 0, length = queries.length; i < length; i++) {
-        const query = queries[i]
-        const chunks = query.split('/')
-        if (chunks.length === 1 && projectBase === query) {
-          return true
-        } else if (chunks.length === 2 && projectName === query) {
-          return true
-        }
-      }
-      return false
+      const projectSlug = project.split(Path.sep).slice(-2).join(Path.sep)
+      return queries.some(query => (query.indexOf('/') === -1 ? query === projectBase : query === projectSlug))
     })
-  }
-  async ensureProjectsRoot(): Promise<void> {
-    await FS.mkdirp(this.getProjectsRoot())
   }
   async getCurrentProjectPath(): Promise<string> {
     const currentDirectory = process.cwd()
