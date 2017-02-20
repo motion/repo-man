@@ -7,7 +7,7 @@ import type { Options, ParsedRepo } from './types'
 export const CONFIG_FILE_NAME = '.repoman.json'
 export const BUILTIN_COMMANDS = new Set([
   'get',
-  'get-config',
+  'get.config',
   'status',
   'sync',
   'exec',

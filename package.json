@@ -28,7 +28,7 @@
     "package-info": "^2.2.3",
     "process-bootstrap": "^1.0.0",
     "rxjs": "^5.1.1",
-    "sb-command": "^1.0.0",
+    "sb-command": "^2.0.1",
     "sb-config-file": "^1.2.1",
     "sb-copy": "^1.0.1",
     "sb-exec": "^3.1.0",

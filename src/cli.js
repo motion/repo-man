@@ -40,22 +40,10 @@ RepoMan.get().then(function(repoMan) {
   // Then register non-builtin commands
   commands.filter(c => !isBuiltinCommand(c.name)).forEach(registerCommand)
 
-  // Run it
-  const processed = command.parse(process.argv, true)
-
   // Options for exec
   command.option('--scope <packages>', 'Comma separated list of packages to execute in')
   command.option('--ignore <packages>', 'Comma separated list of packages to ignore in')
 
-  if (processed.errorMessage) {
-    console.log('Error:', processed.errorMessage)
-  }
-  if (processed.errorMessage || processed.options.help || !processed.callback) {
-    command.showHelp('repoman')
-    if (!processed.options.help) {
-      process.exitCode = 1
-    }
-    return null
-  }
-  return processed.callback(processed.options, ...processed.parameters)
+  // Run it
+  return command.process()
 }).catch(handleError)

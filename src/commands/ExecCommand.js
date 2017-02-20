@@ -6,8 +6,7 @@ export default class ExecCommand extends Command {
   name = 'exec <command> [parameters...]'
   description = 'Run command in projects'
 
-  // TODO: Remove variadic on parameters when sb-command returns it as an array by default
-  async run(options: Object, command: string, ...parameters: Array<string>) {
+  async run(options: Object, command: string, parameters: Array<string>) {
     let projects = await this.getProjects()
 
     if (options.scope) {

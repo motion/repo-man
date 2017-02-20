@@ -6,7 +6,7 @@ import Command from '../command'
 import { parseSourceURI } from '../helpers'
 
 export default class GetConfigCommand extends Command {
-  name = 'get-config <remote_path>'
+  name = 'get.config <remote_path>'
   description = 'Clone the given path into configs root'
 
   async run(_: Object, path: string) {
