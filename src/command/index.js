@@ -12,7 +12,7 @@ import Helpers from './helpers'
 
 import { CONFIG_FILE_NAME, RepoManError } from '../helpers'
 import type RepoMan from '../'
-import type { Options, Project, Repository, Organization, ParsedRepo } from '../types'
+import type { Options, Project, GitState, Organization, ParsedRepo } from '../types'
 
 const getPackageInfo = promisify(packageInfo)
 
@@ -151,7 +151,7 @@ export default class Command {
       repository: await this.getRepositoryDetails(path),
     })
   }
-  async getRepositoryDetails(path: string): Promise<Repository> {
+  async getRepositoryDetails(path: string): Promise<GitState> {
     try {
       return {
         path,

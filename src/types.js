@@ -5,16 +5,13 @@ export type Options = {
 }
 
 export type GitState = {
+  path: string,
   clean: boolean,
   branchLocal: string,
   branchRemote: string,
   filesDirty: number,
   filesUntracked: number,
 }
-
-export type Repository = {
-  path: string,
-} & GitState
 
 export type NpmInfo = {
   name: string,
@@ -26,7 +23,7 @@ export type Project = {
   name: string,
   path: string,
   npm: NpmInfo,
-  repository: Repository,
+  repository: GitState,
   dependencies: Array<string>,
   configurations: Array<string>,
 }

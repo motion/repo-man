@@ -7,7 +7,7 @@ const REGEX_BRANCH_INFO = /^## (.*?)\.\.\.(.*)$/
 const REGEX_FILE_MODIFIED = /^ *M .*/
 const REGEX_FILE_UNTRACKED = /^ *\?\? .*/
 
-export function parseGitStatus(output: string): GitState {
+export function parseGitStatus(cwd: string, output: string): GitState {
   let branchLocal = ''
   let branchRemote = ''
 
@@ -28,6 +28,7 @@ export function parseGitStatus(output: string): GitState {
   }
 
   return {
+    path: cwd,
     clean: !(filesDirty || filesUntracked),
     branchLocal,
     branchRemote,
@@ -37,5 +38,5 @@ export function parseGitStatus(output: string): GitState {
 }
 
 export default function gitStatus(cwd: string) {
-  return exec('git', ['status', '--porcelain', '-b'], { cwd }).then(parseGitStatus)
+  return exec('git', ['status', '--porcelain', '-b'], { cwd }).then(result => parseGitStatus(cwd, result))
 }
