@@ -148,9 +148,6 @@ export default class Command {
     })))
     return packages
   }
-  // Notes:
-  // If package is at root, we ignore their package.json::name and use their repo name
-  // If package is at root, we don't match repo/packageName we match org/repo
   matchPackages(packages: Array<Package>, queries: Array<string>): Array<Package> {
     return packages.filter(pkg => queries.some((query:string) => {
       const chunks = query.split('/').map(i => i.trim()).filter(i => i)
@@ -158,7 +155,7 @@ export default class Command {
         case 1:
           return pkg.path === pkg.project.path ? pkg.project.name === chunks[0] : pkg.name === chunks[0]
         case 2:
-          return pkg.path === pkg.project.path ? `${pkg.project.org}/${pkg.project.name}` === `${chunks[0]}/${chunks[1]}` : `${pkg.project.name}/${pkg.name}` === `${chunks[0]}/${chunks[1]}`
+          return `${pkg.project.org}/${pkg.project.name}` === `${chunks[0]}/${chunks[1]}`
         case 3:
           // Ignore package if there is no pkg.manifest.name
           return pkg.manifest.name && `${pkg.project.org}/${pkg.project.name}/${pkg.manifest.name}` === `${chunks[0]}/${chunks[1]}/${chunks[2]}`
