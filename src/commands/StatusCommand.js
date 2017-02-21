@@ -34,7 +34,7 @@ export default class StatusCommand extends Command {
     const table = new this.helpers.Table({ head, colWidths })
 
     for (let i = 0, length = projects.length; i < length; i++) {
-      table.push(await this.getRow(projects[i], repositories[i], nodePackageStates[i]))
+      table.push(this.getRow(projects[i], repositories[i], nodePackageStates[i]))
     }
     this.log(table.show())
   }
@@ -42,7 +42,7 @@ export default class StatusCommand extends Command {
   row = (content, props) => ({ content, ...props })
   crow = content => this.row(content, { hAlign: 'center' })
 
-  async getRow(project: ProjectState, repository: RepositoryState, nodePackage: NodePackageState) {
+  getRow(project: ProjectState, repository: RepositoryState, nodePackage: NodePackageState) {
     const { Color, Figure, Symbol, tildify } = this.helpers
     const gray = Color.xterm(8)
     const isGit = typeof repository.clean !== 'undefined'
