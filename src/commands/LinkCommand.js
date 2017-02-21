@@ -20,23 +20,22 @@ export default class LinkCommand extends Command {
       projects = projects.filter(i => ignored.indexOf(i) === -1)
     }
     const npmProjects = []
+    const nodePackageStates = await Promise.all(projects.map(entry => this.getNodePackageState(entry)))
 
-    for (const project of projects) {
-      const manifestPath = Path.join(project.path, 'package.json')
+    for (const nodePackageState of nodePackageStates) {
+      const manifestPath = Path.join(nodePackageState.project.path, 'package.json')
       if (await FS.exists(manifestPath)) {
-        // $FlowIgnore: We have to.
-        const manifest = require(manifestPath)
-        if (!manifest.name || manifest.private || !manifest.version) {
-          this.log(`Ignoring ${this.helpers.tildify(project)} because it's a private package`)
+        if (!nodePackageState.name || nodePackageState.private || !nodePackageState.version) {
+          this.log(`Ignoring ${this.helpers.tildify(nodePackageState.project.path)} because it's a private package`)
         } else {
-          npmProjects.push(project)
+          npmProjects.push(nodePackageState.project)
         }
       } else {
-        this.log(`Ignoring ${this.helpers.tildify(project)} because it's not an npm package`)
+        this.log(`Ignoring ${this.helpers.tildify(nodePackageState.project.path)} because it's not an npm package`)
       }
     }
     for (const project of npmProjects) {
-      this.log(`Linking ${this.helpers.tildify(project)}`)
+      this.log(`Linking ${this.helpers.tildify(project.path)}`)
       await this.spawn('npm', ['link'], {
         cwd: project,
         stdio: ['inherit', 'inherit', 'inherit'],
