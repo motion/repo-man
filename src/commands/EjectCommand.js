@@ -15,7 +15,6 @@ export default class EjectCommand extends Command {
     const directories = list || ['.']
     const { Color, Figure, tildify: tld } = this.helpers
 
-    await this.ensureProjectsRoot()
     const ejects = []
     for (const dir of directories) {
       ejects.push(
@@ -49,7 +48,7 @@ export default class EjectCommand extends Command {
       value: path,
     }))
     const answerOrg = await prompt(`${prefixPath}/_____/${sourceName}`, orgOpts)
-    this.newline()
+    this.log()
 
     const org = orgs[orgs.findIndex(x => x.path === answerOrg)]
     const targetDir = Path.join(org.path, sourceName)
@@ -69,8 +68,8 @@ export default class EjectCommand extends Command {
 
     // add config
     if (finalConfig) {
-      const configFile = new ConfigFile(Path.join(targetDir, Helpers.CONFIG_FILE_NAME))
-      configFile.set('configurations', [finalConfig])
+      const configFile = await ConfigFile.get(Path.join(targetDir, Helpers.CONFIG_FILE_NAME))
+      await configFile.set('configurations', [finalConfig])
     }
 
     return { sourceDir, targetDir, skipped: false }

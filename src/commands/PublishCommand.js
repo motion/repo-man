@@ -20,47 +20,48 @@ export default class PublishCommand extends Command {
     }
 
     const projectsFiltered = []
-    const projects = await Promise.all(projectPaths.map(project => this.getProjectDetails(project)))
-    await this.helpers.parallel('Filtering projects', projects.map(project => ({
-      title: project.name,
+    const projects = await Promise.all(projectPaths.map(project => this.getProjectState(project)))
+    const repositories = await Promise.all(projects.map(project => this.getRepositoryState(project)))
+    const nodePackageStates = await Promise.all(projects.map(entry => this.getNodePackageState(entry)))
+
+    await this.helpers.parallel('Filtering projects', nodePackageStates.map(nodePackageState => ({
+      title: nodePackageState.project.name,
       async callback() {
-        const manifestPath = Path.join(project.path, 'package.json')
+        const manifestPath = Path.join(nodePackageState.project.path, 'package.json')
         if (!await FS.exists(manifestPath)) {
           return
         }
-        // $FlowIgnore: We have to.
-        const manifest = require(manifestPath)
-        if (manifest && manifest.version && manifest.name && !manifest.private) {
-          projectsFiltered.push(project)
+        if (nodePackageState.version && nodePackageState.name && !nodePackageState.private) {
+          projectsFiltered.push(nodePackageState.project)
         }
       },
     })))
 
     const projectsToPublish = []
     try {
-      await this.helpers.parallel('Preparing to publish', projectsFiltered.map(project => ({
-        title: project.name,
+      await this.helpers.parallel('Preparing to publish', repositories.filter(i => projectsFiltered.indexOf(i.project) !== -1).map(repository => ({
+        title: repository.project.name,
         // eslint-disable-next-line
         callback: async () => {
-          if (!project.repository.clean) {
-            throw new Error(`Project has uncommited changes: ${this.helpers.tildify(project.path)}`)
+          if (!repositories.clean) {
+            throw new Error(`Project has uncommited changes: ${this.helpers.tildify(repository.project.path)}`)
           }
           let lastTag = ''
           const tagExitCode = await this.spawn('git', ['describe', '--tags', '--abbrev=0'], {
-            cwd: project,
+            cwd: repository.project.path,
             stdio: ['pipe', 'pipe', 'ignore'],
           }, (chunk) => { lastTag = chunk.toString().trim() })
           if (!lastTag || tagExitCode !== 0) {
-            projectsToPublish.push(project)
+            projectsToPublish.push(repository.project)
             return
           }
           let changes = ''
           const diffExitCode = await this.spawn('git', ['diff', `${lastTag}...HEAD`], {
-            cwd: project,
+            cwd: repository.project.path,
             stdio: ['pipe', 'pipe', 'inherit'],
           }, (chunk) => { changes += chunk.toString().trim() })
           if (diffExitCode !== 0 || changes.length) {
-            projectsToPublish.push(project)
+            projectsToPublish.push(repository.project)
           }
         },
       })))
@@ -70,28 +71,27 @@ export default class PublishCommand extends Command {
     }
 
     try {
-      await this.helpers.parallel('Executing prepublish scripts', projectsFiltered.map(project => ({
-        title: project.name,
+      await this.helpers.parallel('Executing prepublish scripts', nodePackageStates.filter(i => projectsToPublish.indexOf(i.project) !== -1).map(nodePackageState => ({
+        title: nodePackageState.project.name,
         // eslint-disable-next-line
         callback: async () => {
           let script
-          // $FlowIgnore: Sorry flow
-          const manifest = require(Path.join(project.path, 'package.json'))
-          if (manifest.scripts) {
-            if (manifest.scripts.prepublish) {
-              script = manifest.scripts.prepublish
-            } else if (manifest.scripts.build) {
-              script = manifest.scripts.build
-            } else if (manifest.scripts.compile) {
-              script = manifest.scripts.compile
+          if (nodePackageState.scripts) {
+            if (nodePackageState.scripts.prepublish) {
+              script = nodePackageState.scripts.prepublish
+            } else if (nodePackageState.scripts.build) {
+              script = nodePackageState.scripts.build
+            } else if (nodePackageState.scripts.compile) {
+              script = nodePackageState.scripts.compile
             }
           }
           if (script) {
-            await this.spawn(process.env.SHELL || 'sh', ['-c', `cd "${project.path}"; ${script}`], {
-              cwd: project.path,
+            // $FlowIgnore
+            await this.spawn(process.env.SHELL || 'sh', ['-c', `cd "${nodePackageState.project.path}"; ${script}`], {
+              cwd: nodePackageState.project.path,
               stdio: ['inherit', 'ignore', 'inherit'],
               env: Object.assign({}, process.env, {
-                PATH: [process.env.PATH, Path.join(project.path, 'node_modules', '.bin')].join(Path.delimiter),
+                PATH: [process.env.PATH, Path.join(nodePackageState.project.path, 'node_modules', '.bin')].join(Path.delimiter),
               }),
             })
           }
@@ -103,7 +103,7 @@ export default class PublishCommand extends Command {
     }
 
     try {
-      await this.helpers.parallel('Publishing to NPM', projectsFiltered.map(project => ({
+      await this.helpers.parallel('Publishing to NPM', projectsToPublish.map(project => ({
         title: project.name,
         // eslint-disable-next-line
         callback: async () => {
@@ -126,7 +126,7 @@ export default class PublishCommand extends Command {
     }
 
     try {
-      await this.helpers.parallel('Pushing to git remote', projectsFiltered.map(project => ({
+      await this.helpers.parallel('Pushing to git remote', projectsToPublish.map(project => ({
         title: project.name,
         // eslint-disable-next-line
         callback: async () => {

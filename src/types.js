@@ -4,31 +4,19 @@ export type Options = {
   stateDirectory: string,
 }
 
-export type GitState = {
-  clean: boolean,
-  branchLocal: string,
-  branchRemote: string,
-  filesDirty: number,
-  filesUntracked: number,
-}
-
-export type Repository = {
-  path: string,
-} & GitState
-
-export type NpmInfo = {
+export type ProjectState = {
+  org: string,
   name: string,
-  version: string,
-  description: string,
+  path: string,
+  packages: Array<string>,
+  dependencies: Array<string>,
+  configurations: Array<string>,
 }
 
 export type Project = {
+  org: string,
   name: string,
   path: string,
-  npm: NpmInfo,
-  repository: Repository,
-  dependencies: Array<string>,
-  configurations: Array<string>,
 }
 
 export type Organization = {
@@ -37,8 +25,30 @@ export type Organization = {
 }
 
 export type ParsedRepo = {
-  username: string,
-  repository: string,
+  org: string,
   tag: ?string,
-  subfolder: ?string,
+  name: string,
+  path: string,
+  subpath: ?string,
+}
+
+export type Package = {
+  path: string,
+  project: Project,
+}
+
+export type NodePackageState = {
+  name: string,
+  version: string,
+  description: string,
+  project: Project,
+}
+
+export type RepositoryState = {
+  clean: boolean,
+  project: Project,
+  branchLocal: string,
+  branchRemote: string,
+  filesDirty: number,
+  filesUntracked: number,
 }

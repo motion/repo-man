@@ -31,9 +31,6 @@ export default class Table {
   push(...args) {
     return this.table.push(...args)
   }
-  from(arr: Array<any>): void {
-    arr.forEach(entry => this.push(entry))
-  }
   show() {
     return this.table.toString()
   }

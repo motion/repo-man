@@ -7,10 +7,10 @@ import Table from './table'
 import Symbol from './symbols'
 import prompt from './prompt'
 import parallel from './parallel'
-import gitStatus from './git-status'
-import { RepoManError } from '../../helpers'
+import getRepositoryState from './repository-state'
+import { CONFIG_FILE_NAME, RepoManError } from '../../helpers'
 
-export default {
+module.exports = {
   tildify,
   Color,
   Figure,
@@ -18,6 +18,7 @@ export default {
   Symbol,
   prompt,
   parallel,
-  gitStatus,
   RepoManError,
+  CONFIG_FILE_NAME,
+  getRepositoryState,
 }

@@ -19,7 +19,7 @@ export default class ExecCommand extends Command {
 
     for (const project of projects) {
       await this.spawn(command, parameters, {
-        cwd: project,
+        cwd: project.path,
         stdio: ['inherit', 'inherit', 'inherit'],
       })
     }

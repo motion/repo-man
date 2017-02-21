@@ -5,9 +5,9 @@ import Path from 'path'
 import copy from 'sb-copy'
 import invariant from 'assert'
 
+import Command from './command'
 import Commands from './commands'
 import * as Helpers from './helpers'
-import type Command from './command'
 import type { Options } from './types'
 
 const PRIVATE = {}
@@ -21,8 +21,6 @@ class RepoMan {
     }
     this.options = options
     this.commands = new Map()
-
-    Commands.forEach((command) => { this.addCommand(command, options) })
   }
   getCommands(): Array<Command> {
     return Array.from(this.commands.values())
@@ -35,9 +33,9 @@ class RepoMan {
     }
     return null
   }
-  addCommand(Entry: Class<Command>, options: Options) {
+  async addCommand(Entry: Class<Command>, options: Options) {
     // initialize command class
-    const command = new Entry(options, this)
+    const command = await Entry.get(options, this)
     invariant(typeof command.name === 'string', 'name must be a string')
     invariant(typeof command.description === 'string', 'description must be a string')
     invariant(typeof command.run === 'function', 'run must be a function')
@@ -56,7 +54,13 @@ class RepoMan {
       failIfExists: false,
     })
 
-    return new RepoMan(PRIVATE, options)
+    const repoMan = new RepoMan(PRIVATE, options)
+    const command = await Command.get(options, repoMan)
+    await FS.mkdirp(command.getProjectsRoot())
+    await FS.mkdirp(command.getConfigsRoot())
+    await Promise.all(Commands.map(entry => repoMan.addCommand(entry, options)))
+
+    return repoMan
   }
 }
 
