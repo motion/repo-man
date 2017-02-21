@@ -39,8 +39,9 @@ export type Organization = {
 }
 
 export type ParsedRepo = {
-  username: string,
-  repository: string,
+  org: string,
   tag: ?string,
-  subfolder: ?string,
+  name: string,
+  path: string,
+  subpath: ?string,
 }

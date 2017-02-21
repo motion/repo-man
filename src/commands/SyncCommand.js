@@ -21,6 +21,7 @@ export default class SyncCommand extends Command {
     const commandGet = this.repoMan.getCommand('get')
     const commandGetConfig = this.repoMan.getCommand('get.config')
     const projectsRoot = await this.getProjectsRoot()
+    const configsRoot = await this.getConfigsRoot()
     invariant(commandGet, 'get command not found when syncing repo')
     invariant(commandGetConfig, 'get.config command not found when syncing repo')
 
@@ -39,9 +40,8 @@ export default class SyncCommand extends Command {
 
         for (const entry of project.dependencies) {
           try {
-            const parsed = parseSourceURI(entry)
-            const entryPath = Path.join(projectsRoot, parsed.username, parsed.repository)
-            if (!await FS.exists(entryPath)) {
+            const parsed = parseSourceURI(projectsRoot, entry)
+            if (!await FS.exists(parsed.path)) {
               observer.next(`Installing ${entry}`)
               await commandGet.run({}, entry)
             }
@@ -55,7 +55,7 @@ export default class SyncCommand extends Command {
         observer.next('Processing configurations')
         for (const entry of project.configurations) {
           try {
-            const configPath = this.getConfigPath(parseSourceURI(entry))
+            const configPath = parseSourceURI(configsRoot, entry)
             // this.log(`Copying ${configPath} ${this.helpers.Figure.arrowRight} ${project.path}`)
             await copy(configPath, project.path, {
               filter: source => Path.basename(source) !== '.git',

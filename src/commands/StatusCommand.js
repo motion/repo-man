@@ -44,6 +44,7 @@ export default class StatusCommand extends Command {
   async getRow(project: ProjectState) {
     const { Color, Figure, Symbol, tildify } = this.helpers
     const gray = Color.xterm(8)
+    // TODO: Upgrade this to use repos
     const repo = project.repository
     const isGit = typeof repo.clean !== 'undefined'
     const none = gray(' - ')

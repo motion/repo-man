@@ -12,7 +12,7 @@ import Helpers from './helpers'
 
 import { CONFIG_FILE_NAME, RepoManError } from '../helpers'
 import type RepoMan from '../'
-import type { Options, Project, ProjectState, GitState, Organization, ParsedRepo } from '../types'
+import type { Options, Project, ProjectState, GitState, Organization } from '../types'
 
 const INTERNAL_VAR = {}
 const getPackageInfo = promisify(packageInfo)
@@ -48,32 +48,21 @@ export default class Command {
   getConfigsRoot(): string {
     return Path.join(this.getProjectsRoot(), '.config')
   }
-  getConfigPath(parsed: ParsedRepo): string {
-    return Path.join(
-      this.getConfigsRoot(),
-      parsed.username,
-      parsed.repository,
-      parsed.subfolder || '',
-    )
-  }
-  getProjectPath(parsed: ParsedRepo): string {
-    return Path.join(
-      this.getProjectsRoot(),
-      parsed.username,
-      parsed.repository,
-    )
-  }
   matchProjects(projects: Array<Project>, queries: Array<string>): Array<Project> {
     return projects.filter(project => queries.some(query => (query.indexOf('/') === -1 ? query === project.name : query === `${project.org}/${project.name}`)))
   }
-  async getCurrentProject(): Promise<string> {
+  async getCurrentProject(): Promise<Project> {
     const currentDirectory = process.cwd()
     const projectsRoot = this.getProjectsRoot()
     const rootIndex = currentDirectory.indexOf(projectsRoot)
     if (rootIndex === 0) {
       const chunks = currentDirectory.slice(projectsRoot.length + 1).split(Path.sep).slice(0, 2)
       if (chunks.length === 2) {
-        return Path.join(projectsRoot, chunks[0], chunks[1])
+        return {
+          org: chunks[0],
+          name: chunks[1],
+          path: Path.join(projectsRoot, chunks[0], chunks[1]),
+        }
       }
     }
     throw new RepoManError('Current directory is not a Repoman project')
@@ -113,35 +102,26 @@ export default class Command {
         const itemPath = Path.join(path, item)
         const stat = await FS.lstat(itemPath)
         if (stat.isDirectory()) {
-          projects.push({ path: itemPath, name: item, org: Path.basename(path) })
+          projects.push({ org: Path.basename(path), name: item, path: itemPath })
         }
       }
       return true
     }))
     return projects
   }
-  async getProjectDetails(path: string, npm: boolean = false): Promise<ProjectState> {
-    const name = path.split(Path.sep).slice(-2).join('/')
-    const configFilePath = Path.join(path, CONFIG_FILE_NAME)
-    let config: Object = {
+  async getProjectDetails(project: Project): Promise<ProjectState> {
+    const configFile = await ConfigFile.get(Path.join(project.path, CONFIG_FILE_NAME), {
       dependencies: [],
       configurations: [],
-    }
-
-    // get config from .repoman.json if exists
-    if (await FS.exists(configFilePath)) {
-      const configFile = await ConfigFile.get(configFilePath, {
-        dependencies: [],
-        configurations: [],
-      })
-      config = await configFile.get()
-    }
+    }, {
+      createIfNonExistent: false,
+    })
+    const config = await configFile.get()
 
     return Object.assign(config, {
-      path,
-      name,
-      npm: npm ? await this.getPackageInfo(path) : null,
-      repository: await this.getRepositoryDetails(path),
+      org: project.org,
+      path: project.path,
+      name: project.name,
     })
   }
   async getRepositoryDetails(path: string): Promise<GitState> {

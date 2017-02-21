@@ -42,9 +42,10 @@ export default class PublishCommand extends Command {
         title: project.name,
         // eslint-disable-next-line
         callback: async () => {
-          if (!project.repository.clean) {
-            throw new Error(`Project has uncommited changes: ${this.helpers.tildify(project.path)}`)
-          }
+          // TODO: Upgrade this to use repos
+          // if (!project.repository.clean) {
+            // throw new Error(`Project has uncommited changes: ${this.helpers.tildify(project.path)}`)
+          // }
           let lastTag = ''
           const tagExitCode = await this.spawn('git', ['describe', '--tags', '--abbrev=0'], {
             cwd: project,

@@ -22,7 +22,7 @@ export default class LinkCommand extends Command {
     const npmProjects = []
 
     for (const project of projects) {
-      const manifestPath = Path.join(project, 'package.json')
+      const manifestPath = Path.join(project.path, 'package.json')
       if (await FS.exists(manifestPath)) {
         // $FlowIgnore: We have to.
         const manifest = require(manifestPath)

@@ -11,6 +11,7 @@ export default class InitCommand extends Command {
   description = 'Add a .repoman.json config file to import configurations from'
 
   async run() {
+    // TODO: Use getCurrentProject() here
     if (await FS.exists(CONFIG_FILE_NAME)) {
       throw new RepoManError('.repoman.json already exists')
     }
