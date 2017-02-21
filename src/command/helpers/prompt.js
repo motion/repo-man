@@ -1,3 +1,4 @@
+import readline from 'readline'
 import inquirer from 'inquirer'
 
 async function prompt(message, choices, options = {}) {
@@ -11,13 +12,17 @@ async function prompt(message, choices, options = {}) {
   return list
 }
 
-prompt.input = async function(message) {
-  const { input } = await inquirer.prompt({
-    type: 'input',
-    name: 'input',
-    message,
+prompt.input = function(message) {
+  return new Promise(function(resolve) {
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    })
+    rl.question(`  ${message}`, function(answer) {
+      rl.close()
+      resolve(answer)
+    })
   })
-  return input
 }
 
 export default prompt
