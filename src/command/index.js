@@ -3,19 +3,17 @@
 import FS from 'sb-fs'
 import Path from 'path'
 import promisify from 'sb-promisify'
-import packageInfo from 'package-info'
-import expandTilde from 'expand-tilde'
 import ConfigFile from 'sb-config-file'
+import expandTilde from 'expand-tilde'
 import ChildProcess from 'child_process'
 
-import Helpers from './helpers'
-
-import { CONFIG_FILE_NAME, RepoManError } from '../helpers'
+import Helpers, { CONFIG_FILE_NAME, RepoManError } from './helpers'
 import type RepoMan from '../'
-import type { Options, Project, ProjectState, RepositoryState, Organization } from '../types'
+import type { Options, Project, ProjectState, RepositoryState, NodePackageState, Organization } from '../types'
+
+const packageInfo = promisify(require('package-info'))
 
 const INTERNAL_VAR = {}
-const getPackageInfo = promisify(packageInfo)
 
 export default class Command {
   name: string;
@@ -125,22 +123,26 @@ export default class Command {
   async getRepositoryState(project: Project): Promise<RepositoryState> {
     return Helpers.getRepositoryState(project)
   }
-  async getPackageInfo(path: string): Promise<?string> {
-    const manifestPath = Path.join(path, 'package.json')
+  async getNodePackageState(project: Project, remote: boolean = false): Promise<NodePackageState> {
+    const contents = {
+      name: '',
+      version: '',
+      description: '',
+      project,
+    }
+    const manifestPath = Path.join(project.path, 'package.json')
     if (!await FS.exists(manifestPath)) {
-      return null
+      return contents
     }
-    const manifestFile = await ConfigFile.get(manifestPath)
-    const manifest = await manifestFile.get()
-    if (typeof manifest.name !== 'string') {
-      return null
+    const manifest = await (await ConfigFile.get(manifestPath)).get()
+    if (!remote || !manifest.name || !manifest.version || manifest.private) {
+      Object.assign(contents, manifest, { project })
+    } else {
+      try {
+        Object.assign(contents, await packageInfo(manifest.name), { project })
+      } catch (_) { /* No Op */ }
     }
-    try {
-      const remoteManifest = await getPackageInfo(manifest.name)
-      return remoteManifest || null
-    } catch (_) {
-      return null
-    }
+    return contents
   }
   async spawn(name: string, parameters: Array<string>, options: Object, onStdout: ?((chunk: string) => any), onStderr: ?((chunk: string) => any)): Promise<number> {
     return new Promise((resolve, reject) => {

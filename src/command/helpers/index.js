@@ -8,9 +8,9 @@ import Symbol from './symbols'
 import prompt from './prompt'
 import parallel from './parallel'
 import getRepositoryState from './repository-state'
-import { RepoManError } from '../../helpers'
+import { CONFIG_FILE_NAME, RepoManError } from '../../helpers'
 
-export default {
+module.exports = {
   tildify,
   Color,
   Figure,
@@ -19,5 +19,6 @@ export default {
   prompt,
   parallel,
   RepoManError,
+  CONFIG_FILE_NAME,
   getRepositoryState,
 }

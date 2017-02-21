@@ -1,7 +1,7 @@
 // @flow
 
 import Command from '../command'
-import type { ProjectState, RepositoryState } from '../types'
+import type { ProjectState, NodePackageState, RepositoryState } from '../types'
 
 export default class StatusCommand extends Command {
   name = 'status'
@@ -14,6 +14,7 @@ export default class StatusCommand extends Command {
     const projectPaths = await this.getProjects()
     const projects = await Promise.all(projectPaths.map(entry => this.getProjectState(entry)))
     const repositories = await Promise.all(projects.map(entry => this.getRepositoryState(entry)))
+    const nodePackageStates = await Promise.all(projects.map(entry => this.getNodePackageState(entry, true)))
 
     const titles = ['project', 'changes', 'branch', 'npm', 'path']
       .map(c => this.helpers.Color.xterm(247)(c))
@@ -33,7 +34,7 @@ export default class StatusCommand extends Command {
     const table = new this.helpers.Table({ head, colWidths })
 
     for (let i = 0, length = projects.length; i < length; i++) {
-      table.push(await this.getRow(projects[i], repositories[i]))
+      table.push(await this.getRow(projects[i], repositories[i], nodePackageStates[i]))
     }
     this.log(table.show())
   }
@@ -41,7 +42,7 @@ export default class StatusCommand extends Command {
   row = (content, props) => ({ content, ...props })
   crow = content => this.row(content, { hAlign: 'center' })
 
-  async getRow(project: ProjectState, repository: RepositoryState) {
+  async getRow(project: ProjectState, repository: RepositoryState, nodePackage: NodePackageState) {
     const { Color, Figure, Symbol, tildify } = this.helpers
     const gray = Color.xterm(8)
     const isGit = typeof repository.clean !== 'undefined'
@@ -50,8 +51,7 @@ export default class StatusCommand extends Command {
 
     let response
     const version = this.showNpm
-      //  TODO: Do something about the removed npm
-      ? this.crow(project.npm ? project.npm.version : none)
+      ? this.crow(nodePackage.version || none)
       : false
 
     if (isGit) {
