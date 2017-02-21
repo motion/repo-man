@@ -1,7 +1,7 @@
 // @flow
 
 import Command from '../command'
-import type { ProjectState } from '../types'
+import type { ProjectState, RepositoryState } from '../types'
 
 export default class StatusCommand extends Command {
   name = 'status'
@@ -12,9 +12,8 @@ export default class StatusCommand extends Command {
     this.showNpm = !!Object.keys(options).filter(x => x === 'npm').length
 
     const projectPaths = await this.getProjects()
-    const projects = await Promise.all(
-      projectPaths.map(entry => this.getProjectState(entry, this.showNpm))
-    )
+    const projects = await Promise.all(projectPaths.map(entry => this.getProjectState(entry)))
+    const repositories = await Promise.all(projects.map(entry => this.getRepositoryState(entry)))
 
     const titles = ['project', 'changes', 'branch', 'npm', 'path']
       .map(c => this.helpers.Color.xterm(247)(c))
@@ -33,35 +32,35 @@ export default class StatusCommand extends Command {
     const colWidths = head.map(getWidth)
     const table = new this.helpers.Table({ head, colWidths })
 
-    // response
-    table.from(await Promise.all(projects.map(project => this.getRow(project))))
+    for (let i = 0, length = projects.length; i < length; i++) {
+      table.push(await this.getRow(projects[i], repositories[i]))
+    }
     this.log(table.show())
   }
 
   row = (content, props) => ({ content, ...props })
   crow = content => this.row(content, { hAlign: 'center' })
 
-  async getRow(project: ProjectState) {
+  async getRow(project: ProjectState, repository: RepositoryState) {
     const { Color, Figure, Symbol, tildify } = this.helpers
     const gray = Color.xterm(8)
-    // TODO: Upgrade this to use repos
-    const repo = project.repository
-    const isGit = typeof repo.clean !== 'undefined'
+    const isGit = typeof repository.clean !== 'undefined'
     const none = gray(' - ')
     const path = gray(tildify(project.path))
 
     let response
     const version = this.showNpm
+      //  TODO: Do something about the removed npm
       ? this.crow(project.npm ? project.npm.version : none)
       : false
 
     if (isGit) {
-      const isDirty = repo.clean ? Symbol.check : Symbol.x
-      const numChanged = repo.filesDirty + repo.filesUntracked
+      const isDirty = repository.clean ? Symbol.check : Symbol.x
+      const numChanged = repository.filesDirty + repository.filesUntracked
       response = [
         `${isDirty} ${project.name}`,
         this.crow(numChanged || none),
-        `${Color.yellow(repo.branchLocal)} ${gray(Figure.arrowRight)} ${repo.branchRemote}`,
+        `${Color.yellow(repository.branchLocal)} ${gray(Figure.arrowRight)} ${repository.branchRemote}`,
         version,
         tildify(path),
       ]
