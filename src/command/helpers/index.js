@@ -7,7 +7,7 @@ import Table from './table'
 import Symbol from './symbols'
 import prompt from './prompt'
 import parallel from './parallel'
-import gitStatus from './git-status'
+import getRepositoryState from './repository-state'
 import { RepoManError } from '../../helpers'
 
 export default {
@@ -18,6 +18,6 @@ export default {
   Symbol,
   prompt,
   parallel,
-  gitStatus,
   RepoManError,
+  getRepositoryState,
 }

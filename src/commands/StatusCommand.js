@@ -13,7 +13,7 @@ export default class StatusCommand extends Command {
 
     const projectPaths = await this.getProjects()
     const projects = await Promise.all(
-      projectPaths.map(entry => this.getProjectDetails(entry, this.showNpm))
+      projectPaths.map(entry => this.getProjectState(entry, this.showNpm))
     )
 
     const titles = ['project', 'changes', 'branch', 'npm', 'path']

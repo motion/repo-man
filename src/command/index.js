@@ -12,7 +12,7 @@ import Helpers from './helpers'
 
 import { CONFIG_FILE_NAME, RepoManError } from '../helpers'
 import type RepoMan from '../'
-import type { Options, Project, ProjectState, GitState, Organization } from '../types'
+import type { Options, Project, ProjectState, RepositoryState, Organization } from '../types'
 
 const INTERNAL_VAR = {}
 const getPackageInfo = promisify(packageInfo)
@@ -109,37 +109,21 @@ export default class Command {
     }))
     return projects
   }
-  async getProjectDetails(project: Project): Promise<ProjectState> {
+  async getProjectState(project: Project): Promise<ProjectState> {
     const configFile = await ConfigFile.get(Path.join(project.path, CONFIG_FILE_NAME), {
       dependencies: [],
       configurations: [],
     }, {
       createIfNonExistent: false,
     })
-    const config = await configFile.get()
-
-    return Object.assign(config, {
+    return Object.assign(await configFile.get(), {
       org: project.org,
       path: project.path,
       name: project.name,
     })
   }
-  async getRepositoryDetails(path: string): Promise<GitState> {
-    try {
-      return {
-        path,
-        ...await Helpers.gitStatus(path),
-      }
-    } catch (e) {
-      return {
-        path,
-        clean: true,
-        branchLocal: '',
-        branchRemote: '',
-        filesDirty: 0,
-        filesUntracked: 0,
-      }
-    }
+  async getRepositoryState(project: Project): Promise<RepositoryState> {
+    return Helpers.getRepositoryState(project)
   }
   async getPackageInfo(path: string): Promise<?string> {
     const manifestPath = Path.join(path, 'package.json')

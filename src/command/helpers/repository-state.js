@@ -1,13 +1,15 @@
 // @flow
 
+import FS from 'sb-fs'
+import Path from 'path'
 import { exec } from 'sb-exec'
-import type { GitState } from '../../types'
+import type { RepositoryState, Project } from '../../types'
 
 const REGEX_BRANCH_INFO = /^## (.*?)\.\.\.(.*)$/
 const REGEX_FILE_MODIFIED = /^ *M .*/
 const REGEX_FILE_UNTRACKED = /^ *\?\? .*/
 
-export function parseGitStatus(cwd: string, output: string): GitState {
+export function parseGitStatus(project: Project, output: string): RepositoryState {
   let branchLocal = ''
   let branchRemote = ''
 
@@ -28,8 +30,8 @@ export function parseGitStatus(cwd: string, output: string): GitState {
   }
 
   return {
-    path: cwd,
     clean: !(filesDirty || filesUntracked),
+    project,
     branchLocal,
     branchRemote,
     filesDirty,
@@ -37,6 +39,17 @@ export function parseGitStatus(cwd: string, output: string): GitState {
   }
 }
 
-export default function gitStatus(cwd: string) {
-  return exec('git', ['status', '--porcelain', '-b'], { cwd }).then(result => parseGitStatus(cwd, result))
+export default async function getRepositoryState(project: Project): Promise<RepositoryState> {
+  const repoPath = Path.join(project.path, '.git')
+  if (await FS.exists(repoPath)) {
+    return parseGitStatus(project, await exec('git', ['status', '--porcelain', '-b'], { cwd: project.path }))
+  }
+  return {
+    clean: true,
+    project,
+    branchLocal: '',
+    branchRemote: '',
+    filesDirty: 0,
+    filesUntracked: 0,
+  }
 }

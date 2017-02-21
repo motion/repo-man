@@ -20,7 +20,9 @@ export default class PublishCommand extends Command {
     }
 
     const projectsFiltered = []
-    const projects = await Promise.all(projectPaths.map(project => this.getProjectDetails(project)))
+    const projects = await Promise.all(projectPaths.map(project => this.getProjectState(project)))
+    const repositories = await Promise.all(projects.map(project => this.getRepositoryState(project)))
+
     await this.helpers.parallel('Filtering projects', projects.map(project => ({
       title: project.name,
       async callback() {
@@ -38,30 +40,29 @@ export default class PublishCommand extends Command {
 
     const projectsToPublish = []
     try {
-      await this.helpers.parallel('Preparing to publish', projectsFiltered.map(project => ({
-        title: project.name,
+      await this.helpers.parallel('Preparing to publish', repositories.map(repository => ({
+        title: repository.project.name,
         // eslint-disable-next-line
         callback: async () => {
-          // TODO: Upgrade this to use repos
-          // if (!project.repository.clean) {
-            // throw new Error(`Project has uncommited changes: ${this.helpers.tildify(project.path)}`)
-          // }
+          if (!repositories.clean) {
+            throw new Error(`Project has uncommited changes: ${this.helpers.tildify(repository.project.path)}`)
+          }
           let lastTag = ''
           const tagExitCode = await this.spawn('git', ['describe', '--tags', '--abbrev=0'], {
-            cwd: project,
+            cwd: repository.project.path,
             stdio: ['pipe', 'pipe', 'ignore'],
           }, (chunk) => { lastTag = chunk.toString().trim() })
           if (!lastTag || tagExitCode !== 0) {
-            projectsToPublish.push(project)
+            projectsToPublish.push(repository.project)
             return
           }
           let changes = ''
           const diffExitCode = await this.spawn('git', ['diff', `${lastTag}...HEAD`], {
-            cwd: project,
+            cwd: repository.project.path,
             stdio: ['pipe', 'pipe', 'inherit'],
           }, (chunk) => { changes += chunk.toString().trim() })
           if (diffExitCode !== 0 || changes.length) {
-            projectsToPublish.push(project)
+            projectsToPublish.push(repository.project)
           }
         },
       })))
