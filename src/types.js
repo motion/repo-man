@@ -32,6 +32,11 @@ export type ParsedRepo = {
   subpath: ?string,
 }
 
+export type Package = {
+  path: string,
+  project: Project,
+}
+
 export type NodePackageState = {
   name: string,
   version: string,

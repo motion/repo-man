@@ -9,8 +9,9 @@ import ChildProcess from 'child_process'
 
 import Helpers, { CONFIG_FILE_NAME, RepoManError } from './helpers'
 import type RepoMan from '../'
-import type { Options, Project, ProjectState, RepositoryState, NodePackageState, Organization } from '../types'
+import type { Options, Project, Package, ProjectState, RepositoryState, NodePackageState, Organization } from '../types'
 
+const glob = promisify(require('glob'))
 const packageInfo = promisify(require('package-info'))
 
 const INTERNAL_VAR = {}
@@ -120,6 +121,18 @@ export default class Command {
       path: project.path,
       name: project.name,
     })
+  }
+  async getProjectPackages(project: ProjectState): Promise<Array<Package>> {
+    let packages = []
+    await Promise.all(project.packages.map(function(entry) {
+      return glob(entry, {
+        cwd: project.path,
+        follow: false,
+      }).then(function(entries) {
+        packages = packages.concat(entries.map(e => Path.resolve(project.path, e)))
+      })
+    }))
+    return packages.map(path => ({ path, project }))
   }
   async getRepositoryState(project: Project): Promise<RepositoryState> {
     return Helpers.getRepositoryState(project)
