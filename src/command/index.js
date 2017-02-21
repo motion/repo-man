@@ -109,6 +109,7 @@ export default class Command {
   }
   async getProjectState(project: Project): Promise<ProjectState> {
     const configFile = await ConfigFile.get(Path.join(project.path, CONFIG_FILE_NAME), {
+      packages: ['./'],
       dependencies: [],
       configurations: [],
     }, {

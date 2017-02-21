@@ -8,6 +8,7 @@ export type ProjectState = {
   org: string,
   name: string,
   path: string,
+  packages: Array<string>,
   dependencies: Array<string>,
   configurations: Array<string>,
 }
