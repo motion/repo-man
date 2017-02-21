@@ -19,8 +19,8 @@ export default class InitCommand extends Command {
     const config = await this.helpers.prompt.input(':')
 
     const configFilePath = Path.join(process.cwd(), CONFIG_FILE_NAME)
-    const configFile = new ConfigFile(configFilePath)
-    configFile.set('configurations', [config])
+    const configFile = await ConfigFile.get(configFilePath)
+    await configFile.set('configurations', [config])
 
     this.log(`Created ${CONFIG_FILE_NAME}`)
   }

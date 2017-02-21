@@ -20,10 +20,9 @@ export type NpmInfo = {
 }
 
 export type ProjectState = {
+  org: string,
   name: string,
   path: string,
-  npm: NpmInfo,
-  repository: GitState,
   dependencies: Array<string>,
   configurations: Array<string>,
 }

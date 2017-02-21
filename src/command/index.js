@@ -14,6 +14,7 @@ import { CONFIG_FILE_NAME, RepoManError } from '../helpers'
 import type RepoMan from '../'
 import type { Options, Project, ProjectState, GitState, Organization, ParsedRepo } from '../types'
 
+const INTERNAL_VAR = {}
 const getPackageInfo = promisify(packageInfo)
 
 export default class Command {
@@ -26,9 +27,13 @@ export default class Command {
   repoMan: RepoMan;
   description: string;
 
-  constructor(options: Options, repoMan: RepoMan) {
-    this.state = new ConfigFile(Path.join(options.stateDirectory, 'state.json'))
-    this.config = new ConfigFile(Path.join(options.stateDirectory, 'config.json'))
+  constructor(internalVar: Object, options: Options, repoMan: RepoMan, state: ConfigFile, config: ConfigFile) {
+    if (internalVar !== INTERNAL_VAR) {
+      throw new Error('Invalid usage of new Command() use Command.get() instead')
+    }
+
+    this.state = state
+    this.config = config
     this.options = options
     this.repoMan = repoMan
     this.helpers = Helpers
@@ -38,7 +43,7 @@ export default class Command {
     throw new Error('Command::run() is unimplemented')
   }
   getProjectsRoot(): string {
-    return expandTilde(this.config.get('projectsRoot'))
+    return expandTilde(this.config.getSync('projectsRoot'))
   }
   getConfigsRoot(): string {
     return Path.join(this.getProjectsRoot(), '.config')
@@ -125,10 +130,11 @@ export default class Command {
 
     // get config from .repoman.json if exists
     if (await FS.exists(configFilePath)) {
-      config = new ConfigFile(configFilePath, {
+      const configFile = await ConfigFile.get(configFilePath, {
         dependencies: [],
         configurations: [],
-      }).get()
+      })
+      config = await configFile.get()
     }
 
     return Object.assign(config, {
@@ -160,7 +166,8 @@ export default class Command {
     if (!await FS.exists(manifestPath)) {
       return null
     }
-    const manifest = (new ConfigFile(manifestPath)).get()
+    const manifestFile = await ConfigFile.get(manifestPath)
+    const manifest = await manifestFile.get()
     if (typeof manifest.name !== 'string') {
       return null
     }
@@ -184,7 +191,7 @@ export default class Command {
       spawned.on('error', reject)
     })
   }
-  log(text: any) {
+  log(text: any = '') {
     if (this.silent) {
       return
     }
@@ -194,10 +201,19 @@ export default class Command {
       console.log(text)
     }
   }
-  newline() {
-    console.log('')
-  }
-  error(value: string) {
-    throw new RepoManError(value)
+  static async get(options: Options, repoMan: RepoMan): Promise<this> {
+    const state = await ConfigFile.get(Path.join(options.stateDirectory, 'state.json'), {
+      plugins: [],
+    }, {
+      prettyPrint: true,
+      createIfNonExistent: true,
+    })
+    const config = await ConfigFile.get(Path.join(options.stateDirectory, 'config.json'), {
+      projectsRoot: '~/projects',
+    }, {
+      prettyPrint: true,
+      createIfNonExistent: true,
+    })
+    return new this(INTERNAL_VAR, options, repoMan, state, config)
   }
 }

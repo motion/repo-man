@@ -21,8 +21,6 @@ class RepoMan {
     }
     this.options = options
     this.commands = new Map()
-
-    Commands.forEach((command) => { this.addCommand(command, options) })
   }
   getCommands(): Array<Command> {
     return Array.from(this.commands.values())
@@ -35,9 +33,9 @@ class RepoMan {
     }
     return null
   }
-  addCommand(Entry: Class<Command>, options: Options) {
+  async addCommand(Entry: Class<Command>, options: Options) {
     // initialize command class
-    const command = new Entry(options, this)
+    const command = await Entry.get(options, this)
     invariant(typeof command.name === 'string', 'name must be a string')
     invariant(typeof command.description === 'string', 'description must be a string')
     invariant(typeof command.run === 'function', 'run must be a function')
@@ -57,9 +55,11 @@ class RepoMan {
     })
 
     const repoMan = new RepoMan(PRIVATE, options)
-    const command = new Command(options, repoMan)
+    const command = await Command.get(options, repoMan)
     await FS.mkdirp(command.getProjectsRoot())
     await FS.mkdirp(command.getConfigsRoot())
+    await Promise.all(Commands.map(entry => repoMan.addCommand(entry, options)))
+
     return repoMan
   }
 }
