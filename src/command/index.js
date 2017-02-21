@@ -134,6 +134,13 @@ export default class Command {
     }))
     return packages.map(path => ({ path, project }))
   }
+  async getProjectsPackages(projects: Array<ProjectState>): Promise<Array<Package>> {
+    let packages = []
+    await Promise.all(projects.map(project => this.getProjectPackages(project).then((projectPackages) => {
+      packages = packages.concat(projectPackages)
+    })))
+    return packages
+  }
   async getRepositoryState(project: Project): Promise<RepositoryState> {
     return Helpers.getRepositoryState(project)
   }
