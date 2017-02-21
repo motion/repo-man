@@ -33,8 +33,10 @@ export type ParsedRepo = {
 }
 
 export type Package = {
+  name: string,
   path: string,
   project: Project,
+  manifest: Object,
 }
 
 export type NodePackageState = {

@@ -47,9 +47,6 @@ export default class Command {
   getConfigsRoot(): string {
     return Path.join(this.getProjectsRoot(), '.config')
   }
-  matchProjects(projects: Array<Project>, queries: Array<string>): Array<Project> {
-    return projects.filter(project => queries.some(query => (query.indexOf('/') === -1 ? query === project.name : query === `${project.org}/${project.name}`)))
-  }
   async getCurrentProject(): Promise<Project> {
     const currentDirectory = process.cwd()
     const projectsRoot = this.getProjectsRoot()
@@ -123,16 +120,32 @@ export default class Command {
     })
   }
   async getProjectPackages(project: ProjectState): Promise<Array<Package>> {
-    let packages = []
-    await Promise.all(project.packages.map(function(entry) {
-      return glob(entry, {
+    const packages = []
+    await Promise.all(project.packages.map(async function(packagePath) {
+      const entries = await glob(packagePath, {
         cwd: project.path,
         follow: false,
-      }).then(function(entries) {
-        packages = packages.concat(entries.map(e => Path.resolve(project.path, e)))
       })
+      for (const entry of entries) {
+        const pkg = {
+          name: '',
+          path: Path.resolve(project.path, entry),
+          project,
+          manifest: {},
+        }
+        const manifestPath = Path.join(pkg.path, 'package.json')
+        if (await FS.exists(manifestPath)) {
+          Object.assign(pkg.manifest, await (await ConfigFile.get(manifestPath)).get())
+        }
+        // NOTE: We discard name if the package is found in repo root
+        // This is to allow --scope and --ignore to target repo names
+        pkg.name = pkg.path !== project.path && pkg.manifest.name ? pkg.manifest.name : Path.basename(pkg.path)
+        pkg.manifest.name = pkg.manifest.name || Path.basename(pkg.path)
+        packages.push(pkg)
+      }
+      return null
     }))
-    return packages.map(path => ({ path, project }))
+    return packages
   }
   async getProjectsPackages(projects: Array<ProjectState>): Promise<Array<Package>> {
     let packages = []
@@ -140,6 +153,24 @@ export default class Command {
       packages = packages.concat(projectPackages)
     })))
     return packages
+  }
+  // Notes:
+  // If package is at root, we ignore their package.json::name and use their repo name
+  // If package is at root, we don't match repo/packageName we match org/repo
+  matchPackages(packages: Array<Package>, queries: Array<string>): Array<Package> {
+    return packages.filter(pkg => queries.some((query:string) => {
+      const chunks = query.split('/').map(i => i.trim()).filter(i => i)
+      switch (chunks.length) {
+        case 1:
+          return pkg.name === chunks[0]
+        case 2:
+          return pkg.path === pkg.project.path ? `${pkg.project.org}/${pkg.project.name}` === `${chunks[0]}/${chunks[1]}` : `${pkg.project.name}/${pkg.name}` === `${chunks[0]}/${chunks[1]}`
+        case 3:
+          return `${pkg.project.org}/${pkg.project.name}/${pkg.manifest.name}` === `${chunks[0]}/${chunks[1]}/${chunks[2]}`
+        default:
+          throw new RepoManError(`Invalid query: ${query}`)
+      }
+    }))
   }
   async getRepositoryState(project: Project): Promise<RepositoryState> {
     return Helpers.getRepositoryState(project)
