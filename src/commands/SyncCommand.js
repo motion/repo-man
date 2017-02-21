@@ -17,7 +17,7 @@ export default class SyncCommand extends Command {
   async run(options: Object, orgName: string) {
     const projectPaths = orgName ? await this.getProjects(orgName) : [await this.getCurrentProject()]
     const overwrite = await this.helpers.prompt('Overwrite files on conflict?', ['no', 'yes']) === 'yes'
-    const projects = await Promise.all(projectPaths.map(path => this.getProjectState(path)))
+    const projects = await Promise.all(projectPaths.map(path => this.getProject(path)))
     const commandGet = this.repoMan.getCommand('get')
     const commandGetConfig = this.repoMan.getCommand('get.config')
     const projectsRoot = await this.getProjectsRoot()

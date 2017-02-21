@@ -7,9 +7,9 @@ import ConfigFile from 'sb-config-file'
 import expandTilde from 'expand-tilde'
 import ChildProcess from 'child_process'
 
-import Helpers, { CONFIG_FILE_NAME, RepoManError } from './helpers'
+import Helpers, { CONFIG_FILE_NAME, CONFIG_DEFAULT_VALUE, RepoManError } from './helpers'
 import type RepoMan from '../'
-import type { Options, Project, Package, ProjectState, RepositoryState, NodePackageState, Organization } from '../types'
+import type { Options, Project, Package, RepositoryState, NodePackageState, Organization } from '../types'
 
 const glob = promisify(require('glob'))
 const packageInfo = promisify(require('package-info'))
@@ -54,11 +54,15 @@ export default class Command {
     if (rootIndex === 0) {
       const chunks = currentDirectory.slice(projectsRoot.length + 1).split(Path.sep).slice(0, 2)
       if (chunks.length === 2) {
-        return {
+        const itemPath = Path.join(projectsRoot, chunks[0], chunks[1])
+        const configFile = await ConfigFile.get(Path.join(itemPath, CONFIG_FILE_NAME), CONFIG_DEFAULT_VALUE, {
+          createIfNonExistent: false,
+        })
+        return Object.assign(await configFile.get(), {
           org: chunks[0],
+          path: itemPath,
           name: chunks[1],
-          path: Path.join(projectsRoot, chunks[0], chunks[1]),
-        }
+        })
       }
     }
     throw new RepoManError('Current directory is not a Repoman project')
@@ -98,28 +102,21 @@ export default class Command {
         const itemPath = Path.join(path, item)
         const stat = await FS.lstat(itemPath)
         if (stat.isDirectory()) {
-          projects.push({ org: Path.basename(path), name: item, path: itemPath })
+          const configFile = await ConfigFile.get(Path.join(itemPath, CONFIG_FILE_NAME), CONFIG_DEFAULT_VALUE, {
+            createIfNonExistent: false,
+          })
+          projects.push(Object.assign(await configFile.get(), {
+            org: Path.basename(path),
+            path: itemPath,
+            name: item,
+          }))
         }
       }
-      return true
+      return null
     }))
     return projects
   }
-  async getProjectState(project: Project): Promise<ProjectState> {
-    const configFile = await ConfigFile.get(Path.join(project.path, CONFIG_FILE_NAME), {
-      packages: ['./'],
-      dependencies: [],
-      configurations: [],
-    }, {
-      createIfNonExistent: false,
-    })
-    return Object.assign(await configFile.get(), {
-      org: project.org,
-      path: project.path,
-      name: project.name,
-    })
-  }
-  async getProjectPackages(project: ProjectState): Promise<Array<Package>> {
+  async getProjectPackages(project: Project): Promise<Array<Package>> {
     const packages = []
     await Promise.all(project.packages.map(async function(packagePath) {
       const entries = await glob(packagePath, {
@@ -137,17 +134,14 @@ export default class Command {
         if (await FS.exists(manifestPath)) {
           Object.assign(pkg.manifest, await (await ConfigFile.get(manifestPath)).get())
         }
-        // NOTE: We discard name if the package is found in repo root
-        // This is to allow --scope and --ignore to target repo names
-        pkg.name = pkg.path !== project.path && pkg.manifest.name ? pkg.manifest.name : Path.basename(pkg.path)
-        pkg.manifest.name = pkg.manifest.name || Path.basename(pkg.path)
+        pkg.name = pkg.manifest.name ? pkg.manifest.name : Path.basename(pkg.path)
         packages.push(pkg)
       }
       return null
     }))
     return packages
   }
-  async getProjectsPackages(projects: Array<ProjectState>): Promise<Array<Package>> {
+  async getProjectsPackages(projects: Array<Project>): Promise<Array<Package>> {
     let packages = []
     await Promise.all(projects.map(project => this.getProjectPackages(project).then((projectPackages) => {
       packages = packages.concat(projectPackages)
@@ -162,11 +156,12 @@ export default class Command {
       const chunks = query.split('/').map(i => i.trim()).filter(i => i)
       switch (chunks.length) {
         case 1:
-          return pkg.name === chunks[0]
+          return pkg.path === pkg.project.path ? pkg.project.name === chunks[0] : pkg.name === chunks[0]
         case 2:
           return pkg.path === pkg.project.path ? `${pkg.project.org}/${pkg.project.name}` === `${chunks[0]}/${chunks[1]}` : `${pkg.project.name}/${pkg.name}` === `${chunks[0]}/${chunks[1]}`
         case 3:
-          return `${pkg.project.org}/${pkg.project.name}/${pkg.manifest.name}` === `${chunks[0]}/${chunks[1]}/${chunks[2]}`
+          // Ignore package if there is no pkg.manifest.name
+          return pkg.manifest.name && `${pkg.project.org}/${pkg.project.name}/${pkg.manifest.name}` === `${chunks[0]}/${chunks[1]}/${chunks[2]}`
         default:
           throw new RepoManError(`Invalid query: ${query}`)
       }

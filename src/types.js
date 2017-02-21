@@ -4,19 +4,13 @@ export type Options = {
   stateDirectory: string,
 }
 
-export type ProjectState = {
+export type Project = {
   org: string,
   name: string,
   path: string,
   packages: Array<string>,
   dependencies: Array<string>,
   configurations: Array<string>,
-}
-
-export type Project = {
-  org: string,
-  name: string,
-  path: string,
 }
 
 export type Organization = {

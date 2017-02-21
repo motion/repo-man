@@ -20,7 +20,7 @@ export default class PublishCommand extends Command {
     }
 
     const projectsFiltered = []
-    const projects = await Promise.all(projectPaths.map(project => this.getProjectState(project)))
+    const projects = await Promise.all(projectPaths.map(project => this.getProject(project)))
     const repositories = await Promise.all(projects.map(project => this.getRepositoryState(project)))
     const nodePackageStates = await Promise.all(projects.map(entry => this.getNodePackageState(entry)))
 

@@ -1,7 +1,7 @@
 // @flow
 
 import Command from '../command'
-import type { ProjectState, NodePackageState, RepositoryState } from '../types'
+import type { Project, NodePackageState, RepositoryState } from '../types'
 
 export default class StatusCommand extends Command {
   name = 'status'
@@ -12,7 +12,7 @@ export default class StatusCommand extends Command {
     this.showNpm = !!Object.keys(options).filter(x => x === 'npm').length
 
     const projectPaths = await this.getProjects()
-    const projects = await Promise.all(projectPaths.map(entry => this.getProjectState(entry)))
+    const projects = await Promise.all(projectPaths.map(entry => this.getProject(entry)))
     const repositories = await Promise.all(projects.map(entry => this.getRepositoryState(entry)))
     const nodePackageStates = await Promise.all(projects.map(entry => this.getNodePackageState(entry, true)))
 
@@ -42,7 +42,7 @@ export default class StatusCommand extends Command {
   row = (content, props) => ({ content, ...props })
   crow = content => this.row(content, { hAlign: 'center' })
 
-  getRow(project: ProjectState, repository: RepositoryState, nodePackage: NodePackageState) {
+  getRow(project: Project, repository: RepositoryState, nodePackage: NodePackageState) {
     const { Color, Figure, Symbol, tildify } = this.helpers
     const gray = Color.xterm(8)
     const isGit = typeof repository.clean !== 'undefined'

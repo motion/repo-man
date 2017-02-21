@@ -3,7 +3,7 @@
 import Path from 'path'
 import invariant from 'assert'
 import expandTilde from 'expand-tilde'
-import type { Options, Project, ParsedRepo } from './types'
+import type { Options, ParsedRepo } from './types'
 
 export const CONFIG_FILE_NAME = '.repoman.json'
 export const BUILTIN_COMMANDS = new Set([
@@ -18,6 +18,11 @@ export const BUILTIN_COMMANDS = new Set([
   'init',
   'link',
 ])
+export const CONFIG_DEFAULT_VALUE = {
+  packages: ['./'],
+  dependencies: [],
+  configurations: [],
+}
 
 export class RepoManError extends Error {
   constructor(message: string) {
