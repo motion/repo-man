@@ -1,8 +1,6 @@
 // @flow
 
 import FS from 'sb-fs'
-import Path from 'path'
-import copy from 'sb-copy'
 import invariant from 'assert'
 
 import Command from './command'
@@ -49,10 +47,6 @@ class RepoMan {
   static async get(givenOptions: Object = {}): Promise<RepoMan> {
     const options = Helpers.fillConfig(givenOptions)
     await FS.mkdirp(options.stateDirectory)
-    await copy(Path.normalize(Path.join(__dirname, '..', 'template', 'root')), options.stateDirectory, {
-      overwrite: false,
-      failIfExists: false,
-    })
 
     const repoMan = new RepoMan(PRIVATE, options)
     const command = await Command.get(options, repoMan)
