@@ -34,6 +34,7 @@
     "sb-copy": "^1.0.1",
     "sb-exec": "^3.1.0",
     "sb-fs": "^1.1.1",
+    "sb-memoize": "^2.1.0",
     "sb-promisify": "^2.0.1",
     "tildify": "^1.2.0"
   }
