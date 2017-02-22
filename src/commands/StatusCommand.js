@@ -10,27 +10,34 @@ export default class StatusCommand extends Command {
 
   showNpm: boolean;
   async run(options: Object) {
-    this.showNpm = !!Object.keys(options).filter(x => x === 'npm').length
+    const table = new this.helpers.Table({ head: ['project', ['changes', 'center'], ['branch', 'center'], options.packages && 'npm', 'path'] })
 
-    const table = new this.helpers.Table({ head: ['project', ['changes', 'center'], ['branch', 'center'], this.showNpm && 'npm', 'path'] })
+    if (options.packages) {
+      const packages = await this.getAllPackages()
+      const packagesRemote = await Promise.all(packages.map(pkg => this.getNodePackageState(pkg)))
+      const repositories = await Promise.all(packages.map(pkg => this.getRepositoryState(pkg.project)))
 
-    const packages = await this.getAllPackages()
-    const packagesRemote = await Promise.all(packages.map(pkg => this.getNodePackageState(pkg)))
-    const repositories = await Promise.all(packages.map(pkg => this.getRepositoryState(pkg.project)))
+      for (let i = 0, length = packages.length; i < length; i++) {
+        table.push(this.getRow(packages[i], packagesRemote[i], repositories[i]))
+      }
+    } else {
+      const projects = await this.getProjects()
+      const repositories = await Promise.all(projects.map(project => this.getRepositoryState(project)))
 
-    for (let i = 0, length = packages.length; i < length; i++) {
-      table.push(this.getRow(packages[i], packagesRemote[i], repositories[i]))
+      for (let i = 0, length = projects.length; i < length; i++) {
+        table.push(this.getRow(projects[i], null, repositories[i]))
+      }
     }
     this.log(table.show())
   }
 
-  getRow(packageLocal: { name: string, path: string }, packageRemote: Package, repository: RepositoryState) {
+  getRow(packageLocal: { name: string, path: string }, packageRemote: ?Package, repository: RepositoryState) {
     const { Color, Figure, Symbol, tildify } = this.helpers
     const gray = Color.xterm(8)
     const none = gray(' - ')
     const path = gray(tildify(packageLocal.path))
 
-    const version = this.showNpm
+    const version = packageRemote
       ? [packageRemote.manifest.version.toString() || none, 'center']
       : false
 
