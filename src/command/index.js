@@ -9,7 +9,7 @@ import ChildProcess from 'child_process'
 
 import Helpers, { CONFIG_FILE_NAME, CONFIG_DEFAULT_VALUE, RepoManError } from './helpers'
 import type RepoMan from '../'
-import type { Options, Project, Package, RepositoryState, NodePackageState, Organization } from '../types'
+import type { Options, Project, Package, RepositoryState, Organization } from '../types'
 
 const glob = promisify(require('glob'))
 const packageInfo = promisify(require('package-info'))
@@ -141,8 +141,9 @@ export default class Command {
     }))
     return packages
   }
-  async getProjectsPackages(projects: Array<Project>): Promise<Array<Package>> {
+  async getAllPackages(): Promise<Array<Package>> {
     let packages = []
+    const projects = await this.getProjects()
     await Promise.all(projects.map(project => this.getProjectPackages(project).then((projectPackages) => {
       packages = packages.concat(projectPackages)
     })))
@@ -167,26 +168,15 @@ export default class Command {
   async getRepositoryState(project: Project): Promise<RepositoryState> {
     return Helpers.getRepositoryState(project)
   }
-  async getNodePackageState(project: Project, remote: boolean = false): Promise<NodePackageState> {
-    const contents = {
-      name: '',
-      version: '',
-      description: '',
-      project,
+  async getNodePackageState(pkg: Package): Promise<Package> {
+    if (!pkg.manifest.name || !pkg.manifest.version || pkg.manifest.private) {
+      return pkg
     }
-    const manifestPath = Path.join(project.path, 'package.json')
-    if (!await FS.exists(manifestPath)) {
-      return contents
-    }
-    const manifest = await (await ConfigFile.get(manifestPath)).get()
-    if (!remote || !manifest.name || !manifest.version || manifest.private) {
-      Object.assign(contents, manifest, { project })
-    } else {
-      try {
-        Object.assign(contents, await packageInfo(manifest.name), { project })
-      } catch (_) { /* No Op */ }
-    }
-    return contents
+    const cloned = Object.assign({}, pkg)
+    try {
+      Object.assign(cloned.manifest, await packageInfo(pkg.manifest.name))
+    } catch (_) { /* No Op */ }
+    return cloned
   }
   async spawn(name: string, parameters: Array<string>, options: Object, onStdout: ?((chunk: string) => any), onStderr: ?((chunk: string) => any)): Promise<number> {
     return new Promise((resolve, reject) => {

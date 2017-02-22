@@ -33,13 +33,6 @@ export type Package = {
   manifest: Object,
 }
 
-export type NodePackageState = {
-  name: string,
-  version: string,
-  description: string,
-  project: Project,
-}
-
 export type RepositoryState = {
   clean: boolean,
   project: Project,

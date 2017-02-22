@@ -7,7 +7,7 @@ export default class ExecCommand extends Command {
   description = 'Run command in projects'
 
   async run(options: Object, command: string, parameters: Array<string>) {
-    let packages = await this.getProjectsPackages(await this.getProjects())
+    let packages = await this.getAllPackages()
 
     if (options.scope) {
       packages = this.matchPackages(packages, options.scope.split(',').filter(i => i))

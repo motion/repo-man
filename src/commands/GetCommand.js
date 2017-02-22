@@ -19,14 +19,13 @@ export default class GetCommand extends Command {
     }
 
     const params = ['clone', `git@github.com:${parsed.org}/${parsed.name}`, parsed.path]
-    const logOutput = givenChunk => this.log(givenChunk.toString('utf8').trim())
-    const cloneExitCode = await this.spawn('git', params, { cwd: projectsRoot }, logOutput, logOutput)
+    const cloneExitCode = await this.spawn('git', params, { cwd: projectsRoot, stdio: 'inherit' })
     if (cloneExitCode !== 0) {
       process.exitCode = 1
       return
     }
     if (parsed.tag) {
-      const tagExitCode = await this.spawn('git', ['checkout', parsed.tag], { cwd: parsed.path }, null, null)
+      const tagExitCode = await this.spawn('git', ['checkout', parsed.tag], { cwd: parsed.path, stdio: 'ignore' })
       if (tagExitCode !== 0) {
         process.exitCode = 1
         return

@@ -1,7 +1,7 @@
 // @flow
 
 import Command from '../command'
-import type { Project, NodePackageState, RepositoryState } from '../types'
+import type { Package, RepositoryState } from '../types'
 
 export default class StatusCommand extends Command {
   name = 'status'
@@ -11,10 +11,9 @@ export default class StatusCommand extends Command {
   async run(options: Object) {
     this.showNpm = !!Object.keys(options).filter(x => x === 'npm').length
 
-    const projectPaths = await this.getProjects()
-    const projects = await Promise.all(projectPaths.map(entry => this.getProject(entry)))
-    const repositories = await Promise.all(projects.map(entry => this.getRepositoryState(entry)))
-    const nodePackageStates = await Promise.all(projects.map(entry => this.getNodePackageState(entry, true)))
+    const packages = await this.getAllPackages()
+    const packagesRemote = await Promise.all(packages.map(pkg => this.getNodePackageState(pkg)))
+    const repositories = await Promise.all(packages.map(pkg => this.getRepositoryState(pkg.project)))
 
     const titles = ['project', 'changes', 'branch', 'npm', 'path']
       .map(c => this.helpers.Color.xterm(247)(c))
@@ -33,8 +32,8 @@ export default class StatusCommand extends Command {
     const colWidths = head.map(getWidth)
     const table = new this.helpers.Table({ head, colWidths })
 
-    for (let i = 0, length = projects.length; i < length; i++) {
-      table.push(this.getRow(projects[i], repositories[i], nodePackageStates[i]))
+    for (let i = 0, length = packages.length; i < length; i++) {
+      table.push(this.getRow(packages[i], packagesRemote[i], repositories[i]))
     }
     this.log(table.show())
   }
@@ -42,23 +41,23 @@ export default class StatusCommand extends Command {
   row = (content, props) => ({ content, ...props })
   crow = content => this.row(content, { hAlign: 'center' })
 
-  getRow(project: Project, repository: RepositoryState, nodePackage: NodePackageState) {
+  getRow(packageLocal: Package, packageRemote: Package, repository: RepositoryState) {
     const { Color, Figure, Symbol, tildify } = this.helpers
     const gray = Color.xterm(8)
     const isGit = typeof repository.clean !== 'undefined'
     const none = gray(' - ')
-    const path = gray(tildify(project.path))
+    const path = gray(tildify(packageLocal.path))
 
     let response
     const version = this.showNpm
-      ? this.crow(nodePackage.version || none)
+      ? this.crow(packageRemote.manifest.version || none)
       : false
 
     if (isGit) {
       const isDirty = repository.clean ? Symbol.check : Symbol.x
       const numChanged = repository.filesDirty + repository.filesUntracked
       response = [
-        `${isDirty} ${project.name}`,
+        `${isDirty} ${packageLocal.name}`,
         this.crow(numChanged || none),
         `${Color.yellow(repository.branchLocal)} ${gray(Figure.arrowRight)} ${repository.branchRemote}`,
         version,
@@ -66,7 +65,7 @@ export default class StatusCommand extends Command {
       ]
     } else {
       response = [
-        `  ${project.name}`,
+        `  ${packageLocal.name}`,
         this.crow(none),
         this.crow(none),
         version,

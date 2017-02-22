@@ -12,16 +12,17 @@ import { parseSourceURI } from '../helpers'
 
 export default class SyncCommand extends Command {
   name = 'sync [org]'
-  description = 'Sync configuration for projects, defaults to just current folder'
+  description = 'Sync configuration for projects, defaults to just current project'
 
   async run(options: Object, orgName: string) {
-    const projectPaths = orgName ? await this.getProjects(orgName) : [await this.getCurrentProject()]
     const overwrite = await this.helpers.prompt('Overwrite files on conflict?', ['no', 'yes']) === 'yes'
-    const projects = await Promise.all(projectPaths.map(path => this.getProject(path)))
+
+    const configsRoot = await this.getConfigsRoot()
+    const projectsRoot = await this.getProjectsRoot()
+    const projects = orgName ? await this.getProjects(orgName) : [await this.getCurrentProject()]
+
     const commandGet = this.repoMan.getCommand('get')
     const commandGetConfig = this.repoMan.getCommand('get.config')
-    const projectsRoot = await this.getProjectsRoot()
-    const configsRoot = await this.getConfigsRoot()
     invariant(commandGet, 'get command not found when syncing repo')
     invariant(commandGetConfig, 'get.config command not found when syncing repo')
 
