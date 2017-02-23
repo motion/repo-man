@@ -56,9 +56,9 @@ export default class SyncCommand extends Command {
         observer.next('Processing configurations')
         for (const entry of project.configurations) {
           try {
-            const configPath = parseSourceURI(configsRoot, entry)
-            // this.log(`Copying ${configPath} ${this.helpers.Figure.arrowRight} ${project.path}`)
-            await copy(configPath, project.path, {
+            const parsed = parseSourceURI(configsRoot, entry)
+            const sourcePath = Path.join(parsed.path, parsed.subpath || '')
+            await copy(sourcePath, project.path, {
               filter: source => Path.basename(source) !== '.git',
               dotFiles: true,
               overwrite,
