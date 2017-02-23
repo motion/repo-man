@@ -72,8 +72,8 @@ export default class Command {
     const entries = await FS.readdir(projectsRoot)
     await Promise.all(entries.map(async function(entry) {
       const path = Path.join(projectsRoot, entry)
-      if (path.substr(0, 1) === '.') {
-        // Ignore dot files
+      if (entry.substr(0, 1) === '.') {
+        // Ignore dot dirs (for ex .config is configs root)
         return true
       }
       const stat = await FS.lstat(path)

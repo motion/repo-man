@@ -9,10 +9,10 @@ import * as Helpers from '../helpers'
 
 export default class EjectCommand extends Command {
   name = 'eject [directories...]'
-  description = 'Move files at path to to-org and track'
+  description = 'Move specified directories into repoman Projects root'
 
-  async run({ config }: Object, ...list: Array<string>) {
-    const directories = list || ['.']
+  async run({ config }: Object, list: Array<string>) {
+    const directories = (list.length ? list : ['.']).map(e => Path.resolve(e))
     const { Color, Figure, tildify: tld } = this.helpers
 
     const ejects = []
@@ -21,22 +21,19 @@ export default class EjectCommand extends Command {
         await this.eject(config, dir)
       )
     }
-    for (const { sourceDir, targetDir, skipped } of ejects) {
+    for (const { directory, targetDir, skipped } of ejects) {
       if (skipped) {
-        this.log(`${Color.white(tld(sourceDir))} skipped`)
+        this.log(Color.blackBright(`Skipping ${this.helpers.tildify(targetDir)} because it already exists`))
       } else {
-        this.log(`${Color.white(tld(sourceDir))} ${Figure.arrowRight} ${Color.yellow.bold(tld(targetDir))}`)
+        this.log(`${Color.white(tld(directory))} ${Figure.arrowRight} ${Color.yellow.bold(tld(targetDir))}`)
       }
     }
-    this.log('👍')
-    this.log(`${directories.join(' ')}`)
+    this.log('All requested directories processed 👍')
   }
   async eject(config: string, directory: string) {
-    const { Color, tildify, prompt } = this.helpers
+    const { tildify, prompt } = this.helpers
 
-    const sourceDir = Path.resolve(directory)
-    const sourceDirList = sourceDir.split(Path.sep)
-    const sourceName = sourceDirList[sourceDirList.length - 1]
+    const sourceName = Path.basename(directory)
 
     const orgs = await this.getOrganizations()
 
@@ -48,22 +45,18 @@ export default class EjectCommand extends Command {
       value: path,
     }))
     const answerOrg = await prompt(`${prefixPath}/_____/${sourceName}`, orgOpts)
-    this.log()
-
     const org = orgs[orgs.findIndex(x => x.path === answerOrg)]
     const targetDir = Path.join(org.path, sourceName)
 
     if (await FS.exists(targetDir)) {
-      this.log(Color.blackBright(`Skipping ${tildify(targetDir)}`))
-      return { sourceDir, targetDir, skipped: true }
+      return { directory, targetDir, skipped: true }
     }
 
-    await copy(sourceDir, targetDir)
+    await copy(directory, targetDir)
 
     let finalConfig = config
     if (!config) {
-      this.log('Config source? (git url or github/repo)')
-      finalConfig = await prompt.input(':')
+      finalConfig = await prompt.input('Config source (git url or github/repo)?')
     }
 
     // add config
@@ -72,6 +65,6 @@ export default class EjectCommand extends Command {
       await configFile.set('configurations', [finalConfig])
     }
 
-    return { sourceDir, targetDir, skipped: false }
+    return { directory, targetDir, skipped: false }
   }
 }

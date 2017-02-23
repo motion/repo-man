@@ -1,6 +1,7 @@
 // @flow
 
 import FS from 'sb-fs'
+import Path from 'path'
 import Command from '../command'
 import { parseSourceURI } from '../helpers'
 
@@ -13,12 +14,12 @@ export default class GetConfigCommand extends Command {
     const configsRoot = this.getConfigsRoot()
     const parsed = parseSourceURI(configsRoot, path)
 
-    await FS.mkdirp(configsRoot)
     if (await FS.exists(parsed.path)) {
       // TODO: Git pull instead of removing maybe?
       this.log(`Replacing old config at ${this.helpers.tildify(parsed.path)}`)
       await FS.rimraf(parsed.path)
     }
+    await FS.mkdirp(Path.dirname(parsed.path))
 
     const cloneExitCode = await this.spawn('git', ['clone', `git@github.com:${parsed.org}/${parsed.name}`, parsed.path], { cwd: parsed.path, stdio: 'inherit' })
     if (cloneExitCode !== 0) {
