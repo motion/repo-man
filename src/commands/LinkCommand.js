@@ -102,7 +102,11 @@ export default class LinkCommand extends Command {
           if (!externalDependencies.length) {
             return
           }
-          await this.spawn(options.npmClient, ['install'].concat(packagesMap[pkg.name].external), {
+          const parameters = ['install'].concat(packagesMap[pkg.name].external)
+          if (options.npmClient === 'npm') {
+            parameters.push('--loglevel', 'error')
+          }
+          await this.spawn(options.npmClient, parameters, {
             cwd: pkg.path,
             stdio: ['ignore', 'ignore', 'inherit'],
           })
