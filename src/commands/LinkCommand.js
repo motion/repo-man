@@ -15,8 +15,8 @@ export default class LinkCommand extends Command {
     ['--no-install', 'Only link packages without installing other dependencies'],
     ['--production', 'Do not install devDependencies when installing dependencies'],
     ['--npm-client <name>', 'Executable used to install external dependencies (eg. npm / pnpm / yarn)', 'npm'],
-    ['--scope <pattern>', 'Limit to packages that match comma separated pattern (eg package-name or org/repo or org/repo/package-name or *)'],
-    ['--ignore <pattern>', 'Ignore packages that match pattern (eg package-name or org/repo or org/repo/package-name)'],
+    ['--scope <pattern>', 'Limit to packages that match comma separated pattern (eg package-name or org/repo or org/repo/package-name or org/* or *)'],
+    ['--ignore <pattern>', 'Ignore packages that match pattern (eg package-name or org/repo or org/repo/package-name or org/*)'],
   ]
 
   async run(options: Object, orgs: Array<string>) {

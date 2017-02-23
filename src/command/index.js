@@ -155,7 +155,7 @@ export default class Command {
         case 1:
           return pkg.path === pkg.project.path ? pkg.project.name === chunks[0] : pkg.name === chunks[0]
         case 2:
-          return `${pkg.project.org}/${pkg.project.name}` === `${chunks[0]}/${chunks[1]}`
+          return chunks[1] === '*' ? chunks[0] === pkg.project.org : `${pkg.project.org}/${pkg.project.name}` === `${chunks[0]}/${chunks[1]}`
         case 3:
           // Ignore package if there is no pkg.manifest.name
           return pkg.manifest.name && `${pkg.project.org}/${pkg.project.name}/${pkg.manifest.name}` === `${chunks[0]}/${chunks[1]}/${chunks[2]}`
