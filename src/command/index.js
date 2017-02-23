@@ -19,7 +19,6 @@ const INTERNAL_VAR = {}
 export default class Command {
   name: string;
   state: ConfigFile;
-  silent: boolean;
   config: ConfigFile;
   options: Options;
   helpers: typeof Helpers;
@@ -192,9 +191,6 @@ export default class Command {
     })
   }
   log(text: any = '') {
-    if (this.silent) {
-      return
-    }
     if (text && text.name === 'RepoManError') {
       console.log('Error:', text.message)
     } else {

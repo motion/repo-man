@@ -8,8 +8,7 @@ export default class GetConfigCommand extends Command {
   name = 'get.config <remote_path>'
   description = 'Clone the given path into configs root'
 
-  async run(_: Object, path: string) {
-    this.silent = _.silent
+  async run(options: Object, path: string) {
     // clones the repo into projects dir
     const configsRoot = this.getConfigsRoot()
     const parsed = parseSourceURI(configsRoot, path)
