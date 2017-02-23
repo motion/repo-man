@@ -7,9 +7,9 @@ import ConfigFile from 'sb-config-file'
 import expandTilde from 'expand-tilde'
 import ChildProcess from 'child_process'
 
-import Helpers, { CONFIG_FILE_NAME, RepoManError } from './helpers'
+import Helpers, { CONFIG_FILE_NAME, CONFIG_DEFAULT_VALUE, RepoManError } from './helpers'
 import type RepoMan from '../'
-import type { Options, Project, Package, ProjectState, RepositoryState, NodePackageState, Organization } from '../types'
+import type { Options, Project, Package, RepositoryState, Organization } from '../types'
 
 const glob = promisify(require('glob'))
 const packageInfo = promisify(require('package-info'))
@@ -19,23 +19,22 @@ const INTERNAL_VAR = {}
 export default class Command {
   name: string;
   state: ConfigFile;
-  silent: boolean;
   config: ConfigFile;
-  options: Options;
+  options: Array<[string, string] | [string, string, any]>;
   helpers: typeof Helpers;
   repoMan: RepoMan;
   description: string;
 
-  constructor(internalVar: Object, options: Options, repoMan: RepoMan, state: ConfigFile, config: ConfigFile) {
+  constructor(internalVar: Object, repoMan: RepoMan, state: ConfigFile, config: ConfigFile) {
     if (internalVar !== INTERNAL_VAR) {
       throw new Error('Invalid usage of new Command() use Command.get() instead')
     }
 
     this.state = state
     this.config = config
-    this.options = options
     this.repoMan = repoMan
     this.helpers = Helpers
+    this.options = []
   }
   // eslint-disable-next-line
   run(...params: Array<any>) {
@@ -47,9 +46,6 @@ export default class Command {
   getConfigsRoot(): string {
     return Path.join(this.getProjectsRoot(), '.config')
   }
-  matchProjects(projects: Array<Project>, queries: Array<string>): Array<Project> {
-    return projects.filter(project => queries.some(query => (query.indexOf('/') === -1 ? query === project.name : query === `${project.org}/${project.name}`)))
-  }
   async getCurrentProject(): Promise<Project> {
     const currentDirectory = process.cwd()
     const projectsRoot = this.getProjectsRoot()
@@ -57,11 +53,15 @@ export default class Command {
     if (rootIndex === 0) {
       const chunks = currentDirectory.slice(projectsRoot.length + 1).split(Path.sep).slice(0, 2)
       if (chunks.length === 2) {
-        return {
+        const itemPath = Path.join(projectsRoot, chunks[0], chunks[1])
+        const configFile = await ConfigFile.get(Path.join(itemPath, CONFIG_FILE_NAME), CONFIG_DEFAULT_VALUE, {
+          createIfNonExistent: false,
+        })
+        return Object.assign(await configFile.get(), {
           org: chunks[0],
+          path: itemPath,
           name: chunks[1],
-          path: Path.join(projectsRoot, chunks[0], chunks[1]),
-        }
+        })
       }
     }
     throw new RepoManError('Current directory is not a Repoman project')
@@ -101,62 +101,81 @@ export default class Command {
         const itemPath = Path.join(path, item)
         const stat = await FS.lstat(itemPath)
         if (stat.isDirectory()) {
-          projects.push({ org: Path.basename(path), name: item, path: itemPath })
+          const configFile = await ConfigFile.get(Path.join(itemPath, CONFIG_FILE_NAME), CONFIG_DEFAULT_VALUE, {
+            createIfNonExistent: false,
+          })
+          projects.push(Object.assign(await configFile.get(), {
+            org: Path.basename(path),
+            path: itemPath,
+            name: item,
+          }))
         }
       }
-      return true
+      return null
     }))
     return projects
   }
-  async getProjectState(project: Project): Promise<ProjectState> {
-    const configFile = await ConfigFile.get(Path.join(project.path, CONFIG_FILE_NAME), {
-      packages: ['./'],
-      dependencies: [],
-      configurations: [],
-    }, {
-      createIfNonExistent: false,
-    })
-    return Object.assign(await configFile.get(), {
-      org: project.org,
-      path: project.path,
-      name: project.name,
-    })
-  }
-  async getProjectPackages(project: ProjectState): Promise<Array<Package>> {
-    let packages = []
-    await Promise.all(project.packages.map(function(entry) {
-      return glob(entry, {
+  async getProjectPackages(project: Project): Promise<Array<Package>> {
+    const packages = []
+    await Promise.all(project.packages.map(async function(packagePath) {
+      const entries = await glob(packagePath, {
         cwd: project.path,
         follow: false,
-      }).then(function(entries) {
-        packages = packages.concat(entries.map(e => Path.resolve(project.path, e)))
       })
+      for (const entry of entries) {
+        const pkg = {
+          name: '',
+          path: Path.resolve(project.path, entry),
+          project,
+          manifest: {},
+        }
+        const manifestPath = Path.join(pkg.path, 'package.json')
+        if (await FS.exists(manifestPath)) {
+          Object.assign(pkg.manifest, await (await ConfigFile.get(manifestPath)).get())
+        }
+        pkg.name = pkg.manifest.name ? pkg.manifest.name : Path.basename(pkg.path)
+        packages.push(pkg)
+      }
+      return null
     }))
-    return packages.map(path => ({ path, project }))
+    return packages
+  }
+  async getAllPackages(): Promise<Array<Package>> {
+    let packages = []
+    const projects = await this.getProjects()
+    await Promise.all(projects.map(project => this.getProjectPackages(project).then((projectPackages) => {
+      packages = packages.concat(projectPackages)
+    })))
+    return packages
+  }
+  matchPackages(packages: Array<Package>, queries: Array<string>): Array<Package> {
+    return packages.filter(pkg => queries.some((query:string) => {
+      const chunks = query.split('/').map(i => i.trim()).filter(i => i)
+      switch (chunks.length) {
+        case 1:
+          return pkg.path === pkg.project.path ? pkg.project.name === chunks[0] : pkg.name === chunks[0]
+        case 2:
+          return `${pkg.project.org}/${pkg.project.name}` === `${chunks[0]}/${chunks[1]}`
+        case 3:
+          // Ignore package if there is no pkg.manifest.name
+          return pkg.manifest.name && `${pkg.project.org}/${pkg.project.name}/${pkg.manifest.name}` === `${chunks[0]}/${chunks[1]}/${chunks[2]}`
+        default:
+          throw new RepoManError(`Invalid query: ${query}`)
+      }
+    }))
   }
   async getRepositoryState(project: Project): Promise<RepositoryState> {
     return Helpers.getRepositoryState(project)
   }
-  async getNodePackageState(project: Project, remote: boolean = false): Promise<NodePackageState> {
-    const contents = {
-      name: '',
-      version: '',
-      description: '',
-      project,
+  async getNodePackageState(pkg: Package): Promise<Package> {
+    if (!pkg.manifest.name || !pkg.manifest.version || pkg.manifest.private) {
+      return pkg
     }
-    const manifestPath = Path.join(project.path, 'package.json')
-    if (!await FS.exists(manifestPath)) {
-      return contents
-    }
-    const manifest = await (await ConfigFile.get(manifestPath)).get()
-    if (!remote || !manifest.name || !manifest.version || manifest.private) {
-      Object.assign(contents, manifest, { project })
-    } else {
-      try {
-        Object.assign(contents, await packageInfo(manifest.name), { project })
-      } catch (_) { /* No Op */ }
-    }
-    return contents
+    const cloned = Object.assign({}, pkg)
+    try {
+      Object.assign(cloned.manifest, await packageInfo(pkg.manifest.name))
+    } catch (_) { /* No Op */ }
+    return cloned
   }
   async spawn(name: string, parameters: Array<string>, options: Object, onStdout: ?((chunk: string) => any), onStderr: ?((chunk: string) => any)): Promise<number> {
     return new Promise((resolve, reject) => {
@@ -172,9 +191,6 @@ export default class Command {
     })
   }
   log(text: any = '') {
-    if (this.silent) {
-      return
-    }
     if (text && text.name === 'RepoManError') {
       console.log('Error:', text.message)
     } else {
@@ -194,6 +210,6 @@ export default class Command {
       prettyPrint: true,
       createIfNonExistent: true,
     })
-    return new this(INTERNAL_VAR, options, repoMan, state, config)
+    return new this(INTERNAL_VAR, repoMan, state, config)
   }
 }

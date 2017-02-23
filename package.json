@@ -29,11 +29,12 @@
     "package-info": "^2.2.3",
     "process-bootstrap": "^1.0.0",
     "rxjs": "^5.1.1",
-    "sb-command": "^2.0.1",
+    "sb-command": "^2.0.4",
     "sb-config-file": "^3.0.2",
     "sb-copy": "^1.0.1",
     "sb-exec": "^3.1.0",
     "sb-fs": "^1.1.1",
+    "sb-memoize": "^2.1.0",
     "sb-promisify": "^2.0.1",
     "tildify": "^1.2.0"
   }

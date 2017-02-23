@@ -1,78 +1,58 @@
 // @flow
 
 import Command from '../command'
-import type { ProjectState, NodePackageState, RepositoryState } from '../types'
+import type { Package, RepositoryState } from '../types'
 
 export default class StatusCommand extends Command {
-  name = 'status'
+  name = 'status [org]'
   description = 'Get status of your projects'
+  options = [
+    ['--packages', 'Show status of packages instead of repositories'],
+  ]
 
-  showNpm: boolean;
-  async run(options: Object) {
-    this.showNpm = !!Object.keys(options).filter(x => x === 'npm').length
+  async run(options: Object, orgName: ?string) {
+    const table = new this.helpers.Table({ head: ['project', ['changes', 'center'], ['branch', 'center'], options.packages && 'npm', 'path'] })
 
-    const projectPaths = await this.getProjects()
-    const projects = await Promise.all(projectPaths.map(entry => this.getProjectState(entry)))
-    const repositories = await Promise.all(projects.map(entry => this.getRepositoryState(entry)))
-    const nodePackageStates = await Promise.all(projects.map(entry => this.getNodePackageState(entry, true)))
+    if (options.packages) {
+      let packages = await this.getAllPackages()
+      if (orgName) {
+        packages = packages.filter(p => p.project.org === orgName)
+      }
+      const packagesRemote = await Promise.all(packages.map(pkg => this.getNodePackageState(pkg)))
+      const repositories = await Promise.all(packages.map(pkg => this.getRepositoryState(pkg.project)))
 
-    const titles = ['project', 'changes', 'branch', 'npm', 'path']
-      .map(c => this.helpers.Color.xterm(247)(c))
-    const head = [
-      `  ${titles[0]}`,
-      this.crow(titles[1]),
-      this.crow(titles[2]),
-      this.showNpm && this.crow(titles[3]),
-      titles[4],
-    ]
-      .filter(x => !!x)
+      for (let i = 0, length = packages.length; i < length; i++) {
+        table.push(this.getRow(packages[i], packagesRemote[i], repositories[i]))
+      }
+    } else {
+      const projects = await this.getProjects(orgName)
+      const repositories = await Promise.all(projects.map(project => this.getRepositoryState(project)))
 
-    const { min, round } = Math
-    const columns = process.stdout.columns
-    const getWidth = () => min(30, round((columns / head.length) * 0.9))
-    const colWidths = head.map(getWidth)
-    const table = new this.helpers.Table({ head, colWidths })
-
-    for (let i = 0, length = projects.length; i < length; i++) {
-      table.push(this.getRow(projects[i], repositories[i], nodePackageStates[i]))
+      for (let i = 0, length = projects.length; i < length; i++) {
+        table.push(this.getRow(projects[i], null, repositories[i]))
+      }
     }
     this.log(table.show())
   }
 
-  row = (content, props) => ({ content, ...props })
-  crow = content => this.row(content, { hAlign: 'center' })
-
-  getRow(project: ProjectState, repository: RepositoryState, nodePackage: NodePackageState) {
+  getRow(packageLocal: { name: string, path: string }, packageRemote: ?Package, repository: RepositoryState) {
     const { Color, Figure, Symbol, tildify } = this.helpers
     const gray = Color.xterm(8)
-    const isGit = typeof repository.clean !== 'undefined'
     const none = gray(' - ')
-    const path = gray(tildify(project.path))
+    const path = gray(tildify(packageLocal.path))
 
-    let response
-    const version = this.showNpm
-      ? this.crow(nodePackage.version || none)
+    const version = packageRemote
+      ? [packageRemote.manifest.version.toString() || none, 'center']
       : false
 
-    if (isGit) {
-      const isDirty = repository.clean ? Symbol.check : Symbol.x
-      const numChanged = repository.filesDirty + repository.filesUntracked
-      response = [
-        `${isDirty} ${project.name}`,
-        this.crow(numChanged || none),
-        `${Color.yellow(repository.branchLocal)} ${gray(Figure.arrowRight)} ${repository.branchRemote}`,
-        version,
-        tildify(path),
-      ]
-    } else {
-      response = [
-        `  ${project.name}`,
-        this.crow(none),
-        this.crow(none),
-        version,
-        tildify(path),
-      ]
-    }
-    return response.filter(x => !!x)
+    const isDirty = repository.clean ? Symbol.check : Symbol.x
+    const numChanged = repository.filesDirty + repository.filesUntracked
+    return [
+      `${isDirty} ${packageLocal.name}`,
+      [numChanged || none, 'center'],
+      `${Color.yellow(repository.branchLocal)} ${gray(Figure.arrowRight)} ${repository.branchRemote}`,
+      version,
+      tildify(path),
+    ]
   }
 }

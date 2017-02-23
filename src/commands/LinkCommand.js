@@ -1,43 +1,35 @@
 // @flow
 /* eslint-disable global-require */
 
-import FS from 'sb-fs'
-import Path from 'path'
 import Command from '../command'
 
 export default class LinkCommand extends Command {
   name = 'link'
   description = 'Link NPM packages'
+  options = [
+    ['--scope <pattern>', 'Limit to packages that match comma separated pattern (eg package-name or org/repo or org/repo/package-name)'],
+    ['--ignore <pattern>', 'Ignore packages that match pattern (eg package-name or org/repo or org/repo/package-name)'],
+  ]
 
   async run(options: Object) {
-    let projects = await this.getProjects()
+    let packages = await this.getAllPackages()
 
     if (options.scope) {
-      projects = this.matchProjects(projects, options.scope.split(',').filter(i => i))
+      packages = this.matchPackages(packages, options.scope.split(',').filter(i => i))
     }
     if (options.ignore) {
-      const ignored = this.matchProjects(projects, options.ignore.split(',').filter(i => i))
-      projects = projects.filter(i => ignored.indexOf(i) === -1)
+      const ignored = this.matchPackages(packages, options.ignore.split(',').filter(i => i))
+      packages = packages.filter(i => ignored.indexOf(i) === -1)
     }
-    const npmProjects = []
-    const nodePackageStates = await Promise.all(projects.map(entry => this.getNodePackageState(entry)))
 
-    for (const nodePackageState of nodePackageStates) {
-      const manifestPath = Path.join(nodePackageState.project.path, 'package.json')
-      if (await FS.exists(manifestPath)) {
-        if (!nodePackageState.name || nodePackageState.private || !nodePackageState.version) {
-          this.log(`Ignoring ${this.helpers.tildify(nodePackageState.project.path)} because it's a private package`)
-        } else {
-          npmProjects.push(nodePackageState.project)
-        }
-      } else {
-        this.log(`Ignoring ${this.helpers.tildify(nodePackageState.project.path)} because it's not an npm package`)
+    for (const pkg of packages) {
+      if (!pkg.manifest.name || pkg.manifest.private || !pkg.manifest.version) {
+        this.log(`Ignoring ${this.helpers.tildify(pkg.path)} because it's a not a public NPM package`)
+        continue
       }
-    }
-    for (const project of npmProjects) {
-      this.log(`Linking ${this.helpers.tildify(project.path)}`)
+      this.log(`Linking ${this.helpers.tildify(pkg.path)}`)
       await this.spawn('npm', ['link'], {
-        cwd: project,
+        cwd: pkg.path,
         stdio: ['inherit', 'inherit', 'inherit'],
       })
     }

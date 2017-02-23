@@ -4,19 +4,13 @@ export type Options = {
   stateDirectory: string,
 }
 
-export type ProjectState = {
+export type Project = {
   org: string,
   name: string,
   path: string,
   packages: Array<string>,
   dependencies: Array<string>,
   configurations: Array<string>,
-}
-
-export type Project = {
-  org: string,
-  name: string,
-  path: string,
 }
 
 export type Organization = {
@@ -33,15 +27,10 @@ export type ParsedRepo = {
 }
 
 export type Package = {
+  name: string,
   path: string,
   project: Project,
-}
-
-export type NodePackageState = {
-  name: string,
-  version: string,
-  description: string,
-  project: Project,
+  manifest: Object,
 }
 
 export type RepositoryState = {
