@@ -64,6 +64,7 @@ export default class LinkCommand extends Command {
         internal: [],
         external: [],
         version: pkg.manifest.version || '',
+        manifest: pkg.manifest,
       }
     })
     const production = options.production || process.env.NODE_ENV === 'production'
@@ -131,5 +132,19 @@ export default class LinkCommand extends Command {
         }
       },
     })))
+
+    const processedPackages = []
+    for (const name in packagesMap) {
+      if (!{}.hasOwnProperty.call(packagesMap, name)) continue
+      const pkg = packagesMap[name]
+      if (pkg.internal.length || (pkg.external.length && !production)) {
+        processedPackages.push(pkg.manifest.name)
+      }
+    }
+    if (processedPackages.length) {
+      this.log(` ${this.helpers.Color.green('✔')} Processed ${processedPackages.join(', ')}`)
+    } else {
+      this.log(` ${this.helpers.Color.red('x')} No packages were linked together`)
+    }
   }
 }
