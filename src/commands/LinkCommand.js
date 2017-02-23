@@ -1,6 +1,8 @@
 // @flow
 /* eslint-disable global-require */
 
+import FS from 'sb-fs'
+import Path from 'path'
 import semver from 'semver'
 import Command from '../command'
 import type { Package } from '../types'
@@ -12,6 +14,7 @@ export default class LinkCommand extends Command {
     ['--together', 'Link packages inside each other instead of linking them globally'],
     ['--no-install', 'Only link packages without installing other dependencies'],
     ['--production', 'Do not install devDependencies when installing dependencies'],
+    ['--npm-client <name>', 'Executable used to install external dependencies (eg. npm / pnpm / yarn)', 'npm'],
     ['--scope <pattern>', 'Limit to packages that match comma separated pattern (eg package-name or org/repo or org/repo/package-name)'],
     ['--ignore <pattern>', 'Ignore packages that match pattern (eg package-name or org/repo or org/repo/package-name)'],
   ]
@@ -53,7 +56,8 @@ export default class LinkCommand extends Command {
     const packagesMap = {}
     packages.forEach((pkg) => {
       packagesMap[pkg.name] = {
-        local: [],
+        path: pkg.path,
+        internal: [],
         external: [],
         version: pkg.manifest.version || '',
       }
@@ -74,9 +78,9 @@ export default class LinkCommand extends Command {
         for (const key in dependencies) {
           if (!{}.hasOwnProperty.call(dependencies, key)) continue
           const expectedVersion = dependencies[key]
-          // NOTE: Do not try to link as local if local's version is empty
-          if (packagesMap[key] && packagesMap[key].verison && semver.satisfies(packagesMap[key].version, expectedVersion)) {
-            packagesMap[pkg.name].local.push(key)
+          // NOTE: Do not try to link as internal if internal's version is empty
+          if (packagesMap[key] && packagesMap[key].version && semver.satisfies(packagesMap[key].version, expectedVersion)) {
+            packagesMap[pkg.name].internal.push(key)
           } else {
             packagesMap[pkg.name].external.push(key)
           }
@@ -84,6 +88,44 @@ export default class LinkCommand extends Command {
       },
     })))
 
-    console.dir(packagesMap, { depth: Infinity })
+    if (!options.noInstall) {
+      await this.helpers.parallel('Installing external dependencies', packages.map(pkg => ({
+        title: pkg.name,
+        // eslint-disable-next-line arrow-parens
+        callback: async () => {
+          const externalDependencies = packagesMap[pkg.name].external
+          if (!externalDependencies.length) {
+            return
+          }
+          await this.spawn(options.npmClient, ['install'].concat(packagesMap[pkg.name].external), {
+            cwd: pkg.path,
+            stdio: ['ignore', 'ignore', 'inherit'],
+          })
+        },
+      })))
+    }
+
+    await this.helpers.parallel('Linking internal dependencies', packages.map(pkg => ({
+      title: pkg.name,
+      // eslint-disable-next-line arrow-parens
+      callback: async () => {
+        const internalDependencies = packagesMap[pkg.name].internal
+        if (!internalDependencies.length) {
+          return
+        }
+        await FS.mkdirp(Path.join(pkg.path, 'node_modules'))
+
+        for (const dependency of internalDependencies) {
+          const destPath = Path.join(pkg.path, 'node_modules', dependency)
+          try {
+            await FS.unlink(destPath)
+          } catch (_) { /* No Op */ }
+          try {
+            await FS.rimraf(destPath)
+          } catch (_) { /* No Op */ }
+          await FS.symlink(packagesMap[dependency].path, destPath)
+        }
+      },
+    })))
   }
 }
