@@ -19,7 +19,7 @@ const DEFAULT_STYLE = {
     middle: '   ',
   },
   style: {
-    'padding-left': 0,
+    'padding-left': 2,
     'padding-right': 0,
   },
 }
@@ -31,9 +31,9 @@ export default class Table {
     const head = givenHead.filter(i => i).map(Table.processEntry)
     // $FlowIgnore: Flow doesn't know that tty stdout can inherit readline columns
     const columns = process.stdout.columns
-    const columnWidth = Math.min(30, Math.round(columns / head.length) * 0.9)
+    const columnWidth = Math.min(40, Math.round(columns / head.length) * 0.9)
 
-    this.table = new CLITable({ head, colWidths: new Array(head.length).fill(columnWidth) })
+    this.table = new CLITable({ ...DEFAULT_STYLE, head, colWidths: new Array(head.length).fill(columnWidth) })
   }
   push(row: Array<any>) {
     return this.table.push(row.filter(i => i).map(Table.processEntry))
