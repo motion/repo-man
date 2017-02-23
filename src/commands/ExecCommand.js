@@ -5,6 +5,10 @@ import Command from '../command'
 export default class ExecCommand extends Command {
   name = 'exec <command> [parameters...]'
   description = 'Run command in projects'
+  options = [
+    ['--scope', 'Limit to packages that match pattern (eg package-name or org/repo or org/repo/package-name)'],
+    ['--ignore', 'Ignore packages that match pattern (eg package-name or org/repo or org/repo/package-name)'],
+  ]
 
   async run(options: Object, command: string, parameters: Array<string>) {
     let packages = await this.getAllPackages()

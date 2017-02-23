@@ -7,6 +7,10 @@ import Command from '../command'
 export default class PublishCommand extends Command {
   name = 'publish <version_or_bump>'
   description = 'Publish repos (supports --scope and --ignore)'
+  options = [
+    ['--scope', 'Limit to packages that match pattern (eg package-name or org/repo or org/repo/package-name)'],
+    ['--ignore', 'Ignore packages that match pattern (eg package-name or org/repo or org/repo/package-name)'],
+  ]
 
   async run(options: Object, bumpType: string) {
     let packages = await this.getAllPackages()

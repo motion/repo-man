@@ -7,6 +7,7 @@ export default class StatusCommand extends Command {
   name = 'status'
   description = 'Get status of your projects'
   // TODO: Add --packages options
+  // TODO: status of org
 
   async run(options: Object) {
     const table = new this.helpers.Table({ head: ['project', ['changes', 'center'], ['branch', 'center'], options.packages && 'npm', 'path'] })

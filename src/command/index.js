@@ -20,6 +20,7 @@ export default class Command {
   name: string;
   state: ConfigFile;
   config: ConfigFile;
+  options: Array<[string, string] | [string, string, any]>;
   helpers: typeof Helpers;
   repoMan: RepoMan;
   description: string;
@@ -33,6 +34,7 @@ export default class Command {
     this.config = config
     this.repoMan = repoMan
     this.helpers = Helpers
+    this.options = []
   }
   // eslint-disable-next-line
   run(...params: Array<any>) {
