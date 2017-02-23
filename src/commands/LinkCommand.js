@@ -7,8 +7,8 @@ export default class LinkCommand extends Command {
   name = 'link'
   description = 'Link NPM packages'
   options = [
-    ['--scope', 'Limit to packages that match pattern (eg package-name or org/repo or org/repo/package-name)'],
-    ['--ignore', 'Ignore packages that match pattern (eg package-name or org/repo or org/repo/package-name)'],
+    ['--scope <pattern>', 'Limit to packages that match comma separated pattern (eg package-name or org/repo or org/repo/package-name)'],
+    ['--ignore <pattern>', 'Ignore packages that match pattern (eg package-name or org/repo or org/repo/package-name)'],
   ]
 
   async run(options: Object) {

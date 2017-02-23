@@ -6,10 +6,10 @@ import Command from '../command'
 
 export default class PublishCommand extends Command {
   name = 'publish <version_or_bump>'
-  description = 'Publish repos (supports --scope and --ignore)'
+  description = 'Publish packages'
   options = [
-    ['--scope', 'Limit to packages that match pattern (eg package-name or org/repo or org/repo/package-name)'],
-    ['--ignore', 'Ignore packages that match pattern (eg package-name or org/repo or org/repo/package-name)'],
+    ['--scope <pattern>', 'Limit to packages that match comma separated pattern (eg package-name or org/repo or org/repo/package-name)'],
+    ['--ignore <pattern>', 'Ignore packages that match pattern (eg package-name or org/repo or org/repo/package-name)'],
   ]
 
   async run(options: Object, bumpType: string) {

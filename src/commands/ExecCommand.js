@@ -6,8 +6,8 @@ export default class ExecCommand extends Command {
   name = 'exec <command> [parameters...]'
   description = 'Run command in projects'
   options = [
-    ['--scope', 'Limit to packages that match pattern (eg package-name or org/repo or org/repo/package-name)'],
-    ['--ignore', 'Ignore packages that match pattern (eg package-name or org/repo or org/repo/package-name)'],
+    ['--scope <pattern>', 'Limit to packages that match comma separated pattern (eg package-name or org/repo or org/repo/package-name)'],
+    ['--ignore <pattern>', 'Ignore packages that match pattern (eg package-name or org/repo or org/repo/package-name)'],
   ]
 
   async run(options: Object, command: string, parameters: Array<string>) {
