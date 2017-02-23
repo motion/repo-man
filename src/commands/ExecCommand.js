@@ -13,7 +13,11 @@ export default class ExecCommand extends Command {
   async run(options: Object, command: string, parameters: Array<string>) {
     let packages = await this.getAllPackages()
 
-    if (options.scope) {
+    if (!options.scope) {
+      const currentProject = await this.getCurrentProject()
+      options.scope = `${currentProject.org}/${currentProject.name}`
+    }
+    if (options.scope !== '*') {
       packages = this.matchPackages(packages, options.scope.split(',').filter(i => i))
     }
     if (options.ignore) {

@@ -64,7 +64,7 @@ export default class Command {
         })
       }
     }
-    throw new RepoManError('Current directory is not a Repoman project')
+    throw new RepoManError('Current directory is not a Repoman project (maybe use --scope if command supports it?)')
   }
   async getOrganizations(): Promise<Array<Organization>> {
     const organizations = []
