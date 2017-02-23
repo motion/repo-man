@@ -12,7 +12,7 @@ export default class EjectCommand extends Command {
   description = 'Move specified directories into repoman Projects root'
 
   async run({ config }: Object, list: Array<string>) {
-    const directories = list.length ? list : ['.']
+    const directories = (list.length ? list : ['.']).map(e => Path.resolve(e))
     const { Color, Figure, tildify: tld } = this.helpers
 
     const ejects = []
@@ -28,8 +28,7 @@ export default class EjectCommand extends Command {
         this.log(`${Color.white(tld(sourceDir))} ${Figure.arrowRight} ${Color.yellow.bold(tld(targetDir))}`)
       }
     }
-    this.log('👍')
-    this.log(`${directories.join(' ')}`)
+    this.log('All requested directories processed 👍')
   }
   async eject(config: string, directory: string) {
     const { Color, tildify, prompt } = this.helpers
