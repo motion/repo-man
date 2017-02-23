@@ -9,10 +9,10 @@ import * as Helpers from '../helpers'
 
 export default class EjectCommand extends Command {
   name = 'eject [directories...]'
-  description = 'Move files at path to to-org and track'
+  description = 'Move specified directories into repoman Projects root'
 
-  async run({ config }: Object, ...list: Array<string>) {
-    const directories = list || ['.']
+  async run({ config }: Object, list: Array<string>) {
+    const directories = list.length ? list : ['.']
     const { Color, Figure, tildify: tld } = this.helpers
 
     const ejects = []
@@ -48,13 +48,11 @@ export default class EjectCommand extends Command {
       value: path,
     }))
     const answerOrg = await prompt(`${prefixPath}/_____/${sourceName}`, orgOpts)
-    this.log()
-
     const org = orgs[orgs.findIndex(x => x.path === answerOrg)]
     const targetDir = Path.join(org.path, sourceName)
 
     if (await FS.exists(targetDir)) {
-      this.log(Color.blackBright(`Skipping ${tildify(targetDir)}`))
+      this.log(Color.blackBright(`Skipping ${tildify(targetDir)} because it already exists`))
       return { sourceDir, targetDir, skipped: true }
     }
 
@@ -62,8 +60,7 @@ export default class EjectCommand extends Command {
 
     let finalConfig = config
     if (!config) {
-      this.log('Config source? (git url or github/repo)')
-      finalConfig = await prompt.input(':')
+      finalConfig = await prompt.input('Config source (git url or github/repo)?')
     }
 
     // add config
