@@ -20,19 +20,17 @@ export default class Command {
   name: string;
   state: ConfigFile;
   config: ConfigFile;
-  options: Options;
   helpers: typeof Helpers;
   repoMan: RepoMan;
   description: string;
 
-  constructor(internalVar: Object, options: Options, repoMan: RepoMan, state: ConfigFile, config: ConfigFile) {
+  constructor(internalVar: Object, repoMan: RepoMan, state: ConfigFile, config: ConfigFile) {
     if (internalVar !== INTERNAL_VAR) {
       throw new Error('Invalid usage of new Command() use Command.get() instead')
     }
 
     this.state = state
     this.config = config
-    this.options = options
     this.repoMan = repoMan
     this.helpers = Helpers
   }
@@ -210,6 +208,6 @@ export default class Command {
       prettyPrint: true,
       createIfNonExistent: true,
     })
-    return new this(INTERNAL_VAR, options, repoMan, state, config)
+    return new this(INTERNAL_VAR, repoMan, state, config)
   }
 }
