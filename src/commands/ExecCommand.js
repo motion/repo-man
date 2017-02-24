@@ -14,8 +14,16 @@ export default class ExecCommand extends Command {
 
   async run(options: Object, command: string, parameters: Array<string>) {
     if (options.projectRoot) {
+      if (!options.scope) {
+        const currentProject = await this.getCurrentProject()
+        options.scope = `${currentProject.org}/*`
+      }
       await this.runProjects(options, command, parameters)
     } else {
+      if (!options.scope) {
+        const currentProject = await this.getCurrentProject()
+        options.scope = `${currentProject.org}/${currentProject.name}`
+      }
       await this.runPackages(options, command, parameters)
     }
   }
