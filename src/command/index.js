@@ -199,6 +199,11 @@ export default class Command {
       }
       spawned.on('close', resolve)
       spawned.on('error', reject)
+    }).catch(function(error) {
+      if (error && typeof error === 'object' && options.cwd) {
+        error.directory = options.cwd
+      }
+      throw error
     })
   }
   log(text: any = '') {
