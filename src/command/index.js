@@ -148,9 +148,22 @@ export default class Command {
     })))
     return packages
   }
+  matchProjects(projects: Array<Project>, queries: Array<string>): Array<Project> {
+    return projects.filter(project => queries.some((query: string) => {
+      const chunks = this.helpers.split(query, '/')
+      switch (chunks.length) {
+        case 1:
+          return project.name === chunks[0]
+        case 2:
+          return chunks[1] === '*' ? chunks[0] === project.org : `${project.org}/${project.name}` === `${chunks[0]}/${chunks[1]}`
+        default:
+          throw new RepoManError(`Invalid query: ${query}`)
+      }
+    }))
+  }
   matchPackages(packages: Array<Package>, queries: Array<string>): Array<Package> {
-    return packages.filter(pkg => queries.some((query:string) => {
-      const chunks = query.split('/').map(i => i.trim()).filter(i => i)
+    return packages.filter(pkg => queries.some((query: string) => {
+      const chunks = this.helpers.split(query, '/')
       switch (chunks.length) {
         case 1:
           return pkg.path === pkg.project.path ? pkg.project.name === chunks[0] : pkg.name === chunks[0]
