@@ -18,10 +18,12 @@ export default class InitCommand extends Command {
       throw new RepoManError('.repoman.json already exists')
     }
 
-    const config = await this.helpers.prompt.input('Config source (Github shorthand, comma separated eg: myorg/myrepo):')
+    const configurations = await this.helpers.prompt.input('Project configurations (Github shorthand, comma separated eg: myorg/myrepo):')
+    const dependencies = await this.helpers.prompt.input('Project dependencies (Github shorthand, comma separated eg: myorg/myrepo):')
 
     const configFile = await ConfigFile.get(configPath, CONFIG_DEFAULT_VALUE)
-    await configFile.set('configurations', config.split(',').map(i => i.trim()).filter(i => i))
+    await configFile.set('configurations', this.helpers.split(configurations, ','))
+    await configFile.set('dependencies', this.helpers.split(dependencies, ','))
 
     this.log(`Created configuration for ${this.helpers.tildify(project.path)}`)
   }

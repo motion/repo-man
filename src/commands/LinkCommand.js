@@ -27,10 +27,10 @@ export default class LinkCommand extends Command {
       options.scope = `${currentProject.org}/*`
     }
     if (options.scope !== '*') {
-      packages = this.matchPackages(packages, options.scope.split(',').filter(i => i))
+      packages = this.matchPackages(packages, this.helpers.split(options.scope, ','))
     }
     if (options.ignore) {
-      const ignored = this.matchPackages(packages, options.ignore.split(',').filter(i => i))
+      const ignored = this.matchPackages(packages, this.helpers.split(options.ignore, ','))
       packages = packages.filter(i => ignored.indexOf(i) === -1)
     }
     if (orgs) {

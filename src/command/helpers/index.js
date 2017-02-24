@@ -10,13 +10,18 @@ import parallel from './parallel'
 import getRepositoryState from './repository-state'
 import { CONFIG_FILE_NAME, CONFIG_DEFAULT_VALUE, RepoManError } from '../../helpers'
 
+function split(contents: string, delimiter: string): Array<string> {
+  return contents.split(delimiter).map(i => i.trim()).filter(i => i)
+}
+
 module.exports = {
-  tildify,
+  split,
   Color,
   Figure,
   Table,
   Symbol,
   prompt,
+  tildify,
   parallel,
   RepoManError,
   CONFIG_FILE_NAME,
