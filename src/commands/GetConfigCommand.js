@@ -21,7 +21,7 @@ export default class GetConfigCommand extends Command {
     }
     await FS.mkdirp(Path.dirname(parsed.path))
 
-    const cloneExitCode = await this.spawn('git', ['clone', `git@github.com:${parsed.org}/${parsed.name}`, parsed.path], { cwd: parsed.path, stdio: 'inherit' })
+    const cloneExitCode = await this.spawn('git', ['clone', `git@github.com:${parsed.org}/${parsed.name}`, parsed.path], { cwd: configsRoot, stdio: 'inherit' })
     if (cloneExitCode !== 0) {
       process.exitCode = 1
       return
