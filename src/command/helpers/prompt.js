@@ -18,7 +18,7 @@ prompt.input = function(message) {
       input: process.stdin,
       output: process.stdout,
     })
-    rl.question(`  ${message}`, function(answer) {
+    rl.question(`  ${message} `, function(answer) {
       rl.close()
       resolve(answer)
     })

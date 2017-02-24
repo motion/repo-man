@@ -18,7 +18,7 @@ export default class InitCommand extends Command {
       throw new RepoManError('.repoman.json already exists')
     }
 
-    const packagePaths = await this.helpers.prompt.input('Location of packages (packages/*/ for monorepo or ./ for non-monorepo):')
+    const packagePaths = await this.helpers.prompt.input('Location of packages (./packages/*/ for monorepo or ./ for non-monorepo):')
     const dependencies = await this.helpers.prompt.input('Project dependencies (Github shorthand, comma separated eg: myorg/myrepo):')
     const configurations = await this.helpers.prompt.input('Project configurations (Github shorthand, comma separated eg: myorg/myrepo):')
 
