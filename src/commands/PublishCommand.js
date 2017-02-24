@@ -1,7 +1,6 @@
 // @flow
 /* eslint-disable global-require */
 
-import Path from 'path'
 import Command from '../command'
 
 export default class PublishCommand extends Command {
@@ -51,7 +50,7 @@ export default class PublishCommand extends Command {
           const tagExitCode = await this.spawn('git', ['describe', '--tags', '--abbrev=0'], {
             cwd: pkg.path,
             stdio: ['pipe', 'pipe', 'ignore'],
-          }, (chunk) => { lastTag = chunk.toString().trim() })
+          }, pkg.project, (chunk) => { lastTag = chunk.toString().trim() })
           if (!lastTag || tagExitCode !== 0) {
             packagesToPublish.push(pkg)
             return
@@ -60,7 +59,7 @@ export default class PublishCommand extends Command {
           const diffExitCode = await this.spawn('git', ['diff', `${lastTag}...HEAD`], {
             cwd: pkg.path,
             stdio: ['pipe', 'pipe', 'inherit'],
-          }, (chunk) => { changes += chunk.toString().trim() })
+          }, pkg.project, (chunk) => { changes += chunk.toString().trim() })
           if (diffExitCode !== 0 || changes.length) {
             packagesToPublish.push(pkg)
           }
@@ -90,10 +89,7 @@ export default class PublishCommand extends Command {
             await this.spawn(process.env.SHELL || 'sh', ['-c', `cd "${pkg.path}"; ${script}`], {
               cwd: pkg.path,
               stdio: ['inherit', 'ignore', 'inherit'],
-              env: Object.assign({}, process.env, {
-                PATH: [process.env.PATH, Path.join(pkg.path, 'node_modules', '.bin')].join(Path.delimiter),
-              }),
-            })
+            }, pkg.project)
           }
         },
       })))
@@ -110,14 +106,14 @@ export default class PublishCommand extends Command {
           const versionExitCode = await this.spawn('npm', ['version', bumpType], {
             cwd: pkg.path,
             stdio: ['ignore', 'ignore', 'inherit'],
-          })
+          }, pkg.project)
           if (versionExitCode !== 0) {
             return
           }
           await this.spawn('npm', ['publish'], {
             cwd: pkg.path,
             stdio: ['ignore', 'ignore', 'inherit'],
-          })
+          }, pkg.project)
         },
       })))
     } catch (_) {
@@ -133,7 +129,7 @@ export default class PublishCommand extends Command {
           await this.spawn('git', ['push', '-u', 'origin', 'HEAD', '--follow-tags'], {
             cwd: pkg.path,
             stdio: ['ignore', 'ignore', 'ignore'],
-          })
+          }, pkg.project)
         },
       })))
     } catch (_) {

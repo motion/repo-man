@@ -53,7 +53,7 @@ export default class LinkCommand extends Command {
       await this.spawn('npm', ['link'], {
         cwd: pkg.path,
         stdio: ['inherit', 'inherit', 'inherit'],
-      })
+      }, pkg.project)
     }
   }
   async linkTogether(packages: Array<Package>, options: Object): Promise<void> {
@@ -109,7 +109,7 @@ export default class LinkCommand extends Command {
           await this.spawn(options.npmClient, parameters, {
             cwd: pkg.path,
             stdio: ['ignore', 'ignore', 'inherit'],
-          })
+          }, pkg.project)
         },
       })))
     }

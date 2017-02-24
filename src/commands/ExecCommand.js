@@ -26,13 +26,13 @@ export default class ExecCommand extends Command {
       await Promise.all(packages.map(pkg => this.spawn(command, parameters, {
         cwd: pkg.path,
         stdio: ['inherit', 'inherit', 'inherit'],
-      })))
+      }, pkg.project)))
     } else {
       for (const pkg of packages) {
         await this.spawn(command, parameters, {
           cwd: pkg.path,
           stdio: ['inherit', 'inherit', 'inherit'],
-        })
+        }, pkg.project)
       }
     }
   }
