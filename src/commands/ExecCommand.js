@@ -41,13 +41,13 @@ export default class ExecCommand extends Command {
     if (options.parallel) {
       await Promise.all(projects.map(project => this.spawn(command, parameters, {
         cwd: project.path,
-        stdio: ['inherit', 'inherit', 'inherit'],
+        stdio: 'inherit',
       }, project)))
     } else {
       for (const project of projects) {
         await this.spawn(command, parameters, {
           cwd: project.path,
-          stdio: ['inherit', 'inherit', 'inherit'],
+          stdio: 'inherit',
         }, project)
       }
     }
@@ -66,13 +66,13 @@ export default class ExecCommand extends Command {
     if (options.parallel) {
       await Promise.all(packages.map(pkg => this.spawn(command, parameters, {
         cwd: pkg.path,
-        stdio: ['inherit', 'inherit', 'inherit'],
+        stdio: 'inherit',
       }, pkg.project)))
     } else {
       for (const pkg of packages) {
         await this.spawn(command, parameters, {
           cwd: pkg.path,
-          stdio: ['inherit', 'inherit', 'inherit'],
+          stdio: 'inherit',
         }, pkg.project)
       }
     }
