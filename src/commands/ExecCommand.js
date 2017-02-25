@@ -8,7 +8,7 @@ export default class ExecCommand extends Command {
   options = [
     ['--scope <pattern>', 'Limit to packages that match comma separated pattern (eg package-name or org/repo or org/repo/package-name or org/* or *)'],
     ['--ignore <pattern>', 'Ignore packages that match pattern (eg package-name or org/repo or org/repo/package-name or org/*)'],
-    ['--parallel', 'Execute tasks in parallel', false],
+    ['--parallel', 'Execute command in parallel instead of series', false],
     ['--in-projects', 'Execute commands in project instead of packages', false],
   ]
 
