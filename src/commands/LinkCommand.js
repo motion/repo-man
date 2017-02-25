@@ -24,7 +24,7 @@ export default class LinkCommand extends Command {
 
     if (!options.scope) {
       const currentProject = await this.getCurrentProject()
-      options.scope = `${currentProject.org}/*`
+      options.scope = `${currentProject.org}/${options.together ? '*' : currentProject.name}`
     }
     if (options.scope !== '*') {
       packages = this.matchPackages(packages, this.helpers.split(options.scope, ','))
