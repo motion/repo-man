@@ -8,8 +8,8 @@ import Command from '../command'
 import type { Package } from '../types'
 
 export default class LinkCommand extends Command {
-  name = 'link'
-  description = 'Link NPM packages [org...]'
+  name = 'link [orgs...]'
+  description = 'Link NPM packages '
   options = [
     ['--together', 'Link packages inside each other instead of linking them globally'],
     ['--no-install', 'Only link packages without installing other dependencies'],
