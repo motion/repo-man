@@ -4,16 +4,16 @@ import Command from '../command'
 
 export default class ExecCommand extends Command {
   name = 'exec <command> [parameters...]'
-  description = 'Run command in projects'
+  description = 'Run command in packages (or projects if you use --in-projects)'
   options = [
     ['--scope <pattern>', 'Limit to packages that match comma separated pattern (eg package-name or org/repo or org/repo/package-name or org/* or *)'],
     ['--ignore <pattern>', 'Ignore packages that match pattern (eg package-name or org/repo or org/repo/package-name or org/*)'],
     ['--parallel', 'Execute tasks in parallel', false],
-    ['--project-root', 'Execute commands in project roots instead of packages', false],
+    ['--in-projects', 'Execute commands in project instead of packages', false],
   ]
 
   async run(options: Object, command: string, parameters: Array<string>) {
-    if (options.projectRoot) {
+    if (options.inProjects) {
       if (!options.scope) {
         const currentProject = await this.getCurrentProject()
         options.scope = `${currentProject.org}/*`
