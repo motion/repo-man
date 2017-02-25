@@ -3,6 +3,7 @@
 import FS from 'sb-fs'
 import Path from 'path'
 import promisify from 'sb-promisify'
+import multimatch from 'multimatch'
 import ConfigFile from 'sb-config-file'
 import expandTilde from 'expand-tilde'
 import ChildProcess from 'child_process'
@@ -149,33 +150,10 @@ export default class Command {
     return packages
   }
   matchProjects(projects: Array<Project>, queries: Array<string>): Array<Project> {
-    return projects.filter(project => queries.some((query: string) => {
-      const chunks = this.helpers.split(query, '/')
-      switch (chunks.length) {
-        case 1:
-          return project.name === chunks[0]
-        case 2:
-          return chunks[1] === '*' ? chunks[0] === project.org : `${project.org}/${project.name}` === `${chunks[0]}/${chunks[1]}`
-        default:
-          throw new RepoManError(`Invalid query: ${query}`)
-      }
-    }))
+    return projects.filter(project => multimatch([project.name, `${project.org}/${project.name}`], queries).length)
   }
   matchPackages(packages: Array<Package>, queries: Array<string>): Array<Package> {
-    return packages.filter(pkg => queries.some((query: string) => {
-      const chunks = this.helpers.split(query, '/')
-      switch (chunks.length) {
-        case 1:
-          return pkg.path === pkg.project.path ? pkg.project.name === chunks[0] : pkg.name === chunks[0]
-        case 2:
-          return chunks[1] === '*' ? chunks[0] === pkg.project.org : `${pkg.project.org}/${pkg.project.name}` === `${chunks[0]}/${chunks[1]}`
-        case 3:
-          // Ignore package if there is no pkg.manifest.name
-          return pkg.manifest.name && `${pkg.project.org}/${pkg.project.name}/${pkg.manifest.name}` === `${chunks[0]}/${chunks[1]}/${chunks[2]}`
-        default:
-          throw new RepoManError(`Invalid query: ${query}`)
-      }
-    }))
+    return packages.filter(pkg => multimatch([pkg.path === pkg.project.path ? pkg.project.path : pkg.name, `${pkg.project.org}/${pkg.project.name}`, `${pkg.project.org}/${pkg.project.name}/${pkg.manifest.name}`], queries).length)
   }
   async getRepositoryState(project: Project): Promise<RepositoryState> {
     return Helpers.getRepositoryState(project)
