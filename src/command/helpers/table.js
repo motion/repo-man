@@ -28,10 +28,10 @@ type Column = string | [string, 'left' | 'center' | 'right']
 
 export default class Table {
   constructor({ head: givenHead }: Array<Column>) {
-    const head = givenHead.filter(i => i).map(Table.processEntry)
+    const head = givenHead.map(Table.processEntry)
     // $FlowIgnore: Flow doesn't know that tty stdout can inherit readline columns
     const columns = process.stdout.columns
-    const columnWidth = Math.min(40, Math.round(columns / head.length) * 0.9)
+    const columnWidth = Math.min(60, Math.round(Math.round(columns / head.length) * 0.7))
 
     this.table = new CLITable({ ...DEFAULT_STYLE, head, colWidths: new Array(head.length).fill(columnWidth) })
   }

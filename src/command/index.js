@@ -170,7 +170,10 @@ export default class Command {
     const cloned = Object.assign({}, pkg)
     try {
       Object.assign(cloned.manifest, await packageInfo(pkg.manifest.name))
-    } catch (_) { /* No Op */ }
+    } catch (_) {
+      console.log('error doing', cloned.name)
+      /* No Op */
+    }
     return cloned
   }
   async spawn(name: string, parameters: Array<string>, givenOptions: Object, project: ?Project, onStdout: ?((chunk: string) => any), onStderr: ?((chunk: string) => any)): Promise<number> {

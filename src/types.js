@@ -30,6 +30,7 @@ export type Package = {
   name: string,
   path: string,
   project: Project,
+  project: Project,
   manifest: Object,
 }
 
