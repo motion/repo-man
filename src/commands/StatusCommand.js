@@ -18,7 +18,7 @@ export default class StatusCommand extends Command {
     }
   }
   async statusPackages(options: Object, orgName: ?string) {
-    const table = new this.helpers.Table({ head: ['project', ['changes', 'center'], ['branch', 'center'], 'npm'] })
+    const table = new this.helpers.Table({ head: ['project', 'changes', 'branch', 'path', 'npm'] })
     let packages = await this.getAllPackages()
     if (orgName) {
       packages = packages.filter(p => p.project.org === orgName)
@@ -33,7 +33,7 @@ export default class StatusCommand extends Command {
     this.log(table.show())
   }
   async statusRepositories(options: Object, orgName: ?string) {
-    const table = new this.helpers.Table({ head: ['project', ['changes', 'center'], ['branch', 'center']] })
+    const table = new this.helpers.Table({ head: ['project', 'changes', 'branch', 'path'] })
     const projects = await this.getProjects(orgName)
     const repositories = await Promise.all(projects.map(project => this.getRepositoryState(project)))
 
@@ -44,13 +44,13 @@ export default class StatusCommand extends Command {
   }
 
   getRow(project: Project, packageLocal: ?Package, packageRemote: ?Package, repository: RepositoryState) {
-    const { Color, Figure, Symbol } = this.helpers
+    const { tildify, Color, Figure, Symbol } = this.helpers
     const gray = Color.xterm(8)
     const none = gray(' - ')
 
     const version = packageRemote
-      ? [packageRemote.manifest.version.toString() || none, 'center']
-      : false
+      ? packageRemote.manifest.version.toString() || none
+      : ''
 
     const isDirty = repository.clean ? Symbol.check : Symbol.x
     const numChanged = repository.filesDirty + repository.filesUntracked
@@ -64,8 +64,9 @@ export default class StatusCommand extends Command {
 
     return [
       `${isDirty} ${name}`,
-      [numChanged || none, 'center'],
+      numChanged.toString() || none,
       `${Color.yellow(repository.branchLocal)} ${gray(Figure.arrowRight)} ${repository.branchRemote}`,
+      gray(tildify(packageLocal ? packageLocal.path : project.path)),
       version,
     ]
   }

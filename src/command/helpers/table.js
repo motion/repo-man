@@ -1,4 +1,6 @@
-import CLITable from 'cli-table2'
+/* @flow */
+
+const CLITable = require('cli-table')
 
 const DEFAULT_STYLE = {
   chars: {
@@ -24,27 +26,23 @@ const DEFAULT_STYLE = {
   },
 }
 
-type Column = string | [string, 'left' | 'center' | 'right']
 
 export default class Table {
-  constructor({ head: givenHead }: Array<Column>) {
-    const head = givenHead.map(Table.processEntry)
-    // $FlowIgnore: Flow doesn't know that tty stdout can inherit readline columns
-    const columns = process.stdout.columns
-    const columnWidth = Math.min(60, Math.round(Math.round(columns / head.length) * 0.7))
-
-    this.table = new CLITable({ ...DEFAULT_STYLE, head, colWidths: new Array(head.length).fill(columnWidth) })
+  head: Array<string>;
+  rows: Array<Array<string>>;
+  constructor({ head }: { head: Array<string> }) {
+    this.rows = []
+    this.head = head.filter(i => i)
   }
-  push(row: Array<any>) {
-    return this.table.push(row.filter(i => i).map(Table.processEntry))
+  push(row: Array<string>) {
+    this.rows.push(row.filter(i => i))
   }
   show() {
-    return this.table.toString()
-  }
-  static processEntry(entry: Column): Object {
-    return {
-      content: Array.isArray(entry) ? entry[0] : entry,
-      hAlign: Array.isArray(entry) ? entry[1] : 'left',
-    }
+    const table = new CLITable({
+      ...DEFAULT_STYLE,
+      head: this.head,
+    })
+    table.push(...this.rows)
+    return table.toString()
   }
 }
