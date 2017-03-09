@@ -52,7 +52,7 @@ export default class LinkCommand extends Command {
       this.log(`Linking ${this.helpers.tildify(pkg.path)}`)
       await this.spawn('npm', ['link'], {
         cwd: pkg.path,
-        stdio: ['inherit', 'inherit', 'inherit'],
+        stdio: 'inherit',
       }, pkg.project)
     }
   }

@@ -6,18 +6,6 @@ import expandTilde from 'expand-tilde'
 import type { Options, ParsedRepo } from './types'
 
 export const CONFIG_FILE_NAME = '.repoman.json'
-export const BUILTIN_COMMANDS = new Set([
-  'get',
-  'get.config',
-  'status',
-  'sync',
-  'exec',
-  'bootstrap',
-  'publish',
-  'eject',
-  'init',
-  'link',
-])
 export const CONFIG_DEFAULT_VALUE = {
   packages: ['./'],
   dependencies: [],

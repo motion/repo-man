@@ -175,7 +175,7 @@ export default class Command {
         PATH: [options.env.PATH, Path.join(options.cwd, 'node_modules', '.bin')].join(Path.delimiter),
       })
     }
-    if (project) {
+    if (project && project.path !== options.cwd) {
       options.env = Object.assign(options.env, {
         PATH: [options.env.PATH, Path.join(project.path, 'node_modules', '.bin')].join(Path.delimiter),
       })

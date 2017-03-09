@@ -7,6 +7,7 @@ import Sync from './SyncCommand'
 import Eject from './EjectCommand'
 import Init from './InitCommand'
 import Exec from './ExecCommand'
+import Run from './RunCommand'
 import Publish from './PublishCommand'
 import Link from './LinkCommand'
 
@@ -18,6 +19,7 @@ export default [
   Eject,
   Init,
   Exec,
+  Run,
   Publish,
   Link,
 ]
