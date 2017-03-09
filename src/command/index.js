@@ -99,6 +99,11 @@ export default class Command {
     await Promise.all(organizations.map(async function({ path }) {
       const items = await FS.readdir(path)
       for (const item of items) {
+        if (item.substr(0, 1) === '.') {
+          // Ignore dot dirs, some IDEs create dot dirs in roots
+          continue
+        }
+
         const itemPath = Path.join(path, item)
         const stat = await FS.lstat(itemPath)
         if (stat.isDirectory()) {
