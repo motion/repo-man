@@ -8,7 +8,7 @@ import Command from '../command'
 import type { Package } from '../types'
 
 export default class LinkCommand extends Command {
-  name = 'link [orgs...]'
+  name = 'link'
   description = 'Link NPM packages '
   options = [
     ['--together', 'Link packages inside each other instead of linking them globally'],
@@ -19,7 +19,7 @@ export default class LinkCommand extends Command {
     ['--ignore <pattern>', 'Ignore packages that match pattern (eg package-name or org/repo or org/repo/package-name or org/*)'],
   ]
 
-  async run(options: Object, orgs: Array<string>) {
+  async run(options: Object) {
     let packages = await this.getAllPackages()
 
     if (!options.scope) {
@@ -33,10 +33,6 @@ export default class LinkCommand extends Command {
       const ignored = this.matchPackages(packages, this.helpers.split(options.ignore, ','))
       packages = packages.filter(i => ignored.indexOf(i) === -1)
     }
-    if (orgs) {
-      packages = packages.filter(pkg => orgs.indexOf(pkg.project.org) !== -1)
-    }
-
     if (options.together) {
       await this.linkTogether(packages, options)
     } else {
