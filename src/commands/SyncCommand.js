@@ -10,6 +10,7 @@ import { Observable } from 'rxjs/Observable'
 import Command from '../command'
 import { parseSourceURI } from '../helpers'
 
+// TODO: Replace org with scope
 export default class SyncCommand extends Command {
   name = 'sync [org]'
   description = 'Sync configuration for projects, defaults to just current project'

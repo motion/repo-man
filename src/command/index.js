@@ -7,13 +7,13 @@ import multimatch from 'multimatch'
 import ConfigFile from 'sb-config-file'
 import expandTilde from 'expand-tilde'
 import ChildProcess from 'child_process'
+import getPackageInfo from 'sb-package-info'
 
 import Helpers, { CONFIG_FILE_NAME, CONFIG_DEFAULT_VALUE, RepoManError } from './helpers'
 import type RepoMan from '../'
 import type { Options, Project, Package, RepositoryState, Organization } from '../types'
 
 const glob = promisify(require('glob'))
-const packageInfo = promisify(require('package-info'))
 
 const INTERNAL_VAR = {}
 
@@ -99,6 +99,11 @@ export default class Command {
     await Promise.all(organizations.map(async function({ path }) {
       const items = await FS.readdir(path)
       for (const item of items) {
+        if (item.substr(0, 1) === '.') {
+          // Ignore dot dirs, some IDEs create dot dirs in roots
+          continue
+        }
+
         const itemPath = Path.join(path, item)
         const stat = await FS.lstat(itemPath)
         if (stat.isDirectory()) {
@@ -164,7 +169,7 @@ export default class Command {
     }
     const cloned = Object.assign({}, pkg)
     try {
-      Object.assign(cloned.manifest, await packageInfo(pkg.manifest.name))
+      Object.assign(cloned.manifest, await getPackageInfo(pkg.manifest.name))
     } catch (_) { /* No Op */ }
     return cloned
   }
