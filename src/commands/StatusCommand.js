@@ -10,6 +10,7 @@ export default class StatusCommand extends Command {
   description = 'Get status of your projects'
   options = [
     ['--packages', 'Show status of packages instead of repositories'],
+    ['--no-fetch', 'Do not fetch remote updates'],
     ['--scope <pattern>', 'Limit to results to packages or repositories that match the given pattern'],
   ]
 
@@ -27,7 +28,7 @@ export default class StatusCommand extends Command {
       packages = this.matchPackages(packages, this.helpers.split(options.scope, ','))
     }
 
-    const repositories = await this.processRepositories(uniqBy(packages.map(p => p.project), project => project.path))
+    const repositories = await this.processRepositories(uniqBy(packages.map(p => p.project), project => project.path), options)
     const packagesRemote: Map<Package, Package> = new Map()
 
     await this.helpers.parallel('Getting remote details', packages.map(pkg => ({
@@ -54,7 +55,7 @@ export default class StatusCommand extends Command {
       projects = this.matchProjects(projects, this.helpers.split(options.scope, ','))
     }
 
-    const repositories = await this.processRepositories(projects)
+    const repositories = await this.processRepositories(projects, options)
 
     for (let i = 0, length = projects.length; i < length; i++) {
       const repository = repositories.get(projects[i])
@@ -63,13 +64,16 @@ export default class StatusCommand extends Command {
     }
     this.log(table.show())
   }
-  async processRepositories(projects: Array<Project>): Promise<Map<Project, RepositoryState>> {
+  async processRepositories(projects: Array<Project>, options: Object): Promise<Map<Project, RepositoryState>> {
     const repositories = new Map()
     // eslint-disable-next-line arrow-parens
     await Promise.all(projects.map(async (project) => {
       repositories.set(project, await this.getRepositoryState(project))
       return null
     }))
+    if (options.noFetch) {
+      return repositories
+    }
     await this.helpers.parallel('Refreshing repositories', projects.map(project => ({
       title: `${project.org}/${project.name}`,
       // eslint-disable-next-line arrow-parens
