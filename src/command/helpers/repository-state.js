@@ -2,7 +2,6 @@
 
 import FS from 'sb-fs'
 import Path from 'path'
-import memoize from 'sb-memoize'
 import { exec } from 'sb-exec'
 import type { RepositoryState, Project } from '../../types'
 
@@ -40,7 +39,7 @@ export function parseGitStatus(project: Project, output: string): RepositoryStat
   }
 }
 
-export default memoize(async function getRepositoryState(project: Project): Promise<RepositoryState> {
+export default async function getRepositoryState(project: Project): Promise<RepositoryState> {
   const repoPath = Path.join(project.path, '.git')
   if (await FS.exists(repoPath)) {
     return parseGitStatus(project, await exec('git', ['status', '--porcelain', '-b'], { cwd: project.path }))
@@ -53,4 +52,4 @@ export default memoize(async function getRepositoryState(project: Project): Prom
     filesDirty: 0,
     filesUntracked: 0,
   }
-}, { async: true })
+}
