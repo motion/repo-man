@@ -1,5 +1,6 @@
 // @flow
 
+import Path from 'path'
 import Color from 'cli-color'
 import isGlob from 'is-glob'
 import tildify from 'tildify'
@@ -18,6 +19,23 @@ function split(contents: string, delimiter: string): Array<string> {
   return contents.split(delimiter).map(i => i.trim()).filter(i => i)
 }
 
+const KEYS_TO_NORMALIZE = { PATH: Path.delimiter }
+export function cloneEnv(givenEnv: Object): string {
+  const env = Object.assign({}, givenEnv)
+  for (const key in process.env) {
+    const upperKey = key.toUpperCase()
+    if (!KEYS_TO_NORMALIZE[upperKey]) continue
+    if (!{}.hasOwnProperty.call(env, key)) continue
+
+    if (!env[upperKey]) {
+      env[upperKey] = ''
+    }
+    env[upperKey] = [env[upperKey], env[key]].join(KEYS_TO_NORMALIZE[upperKey])
+    delete env[key]
+  }
+  return env
+}
+
 module.exports = {
   split,
   Color,
@@ -27,6 +45,7 @@ module.exports = {
   prompt,
   tildify,
   parallel,
+  cloneEnv,
   RepoManError,
   CONFIG_FILE_NAME,
   getRepositoryState,

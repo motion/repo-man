@@ -174,16 +174,12 @@ export default class Command {
     return cloned
   }
   async spawn(name: string, parameters: Array<string>, givenOptions: Object, project: ?Project, onStdout: ?((chunk: string) => any), onStderr: ?((chunk: string) => any)): Promise<number> {
-    const options = Object.assign({}, givenOptions, { env: Object.assign({}, givenOptions.env || process.env) })
+    const options = Object.assign({}, givenOptions, { env: Helpers.cloneEnv(givenOptions.env || process.env) })
     if (options.cwd) {
-      options.env = Object.assign(options.env, {
-        PATH: [options.env.PATH, Path.join(options.cwd, 'node_modules', '.bin')].join(Path.delimiter),
-      })
+      options.env.PATH = [options.env.PATH, Path.join(options.cwd, 'node_modules', '.bin')].join(Path.delimiter)
     }
     if (project && project.path !== options.cwd) {
-      options.env = Object.assign(options.env, {
-        PATH: [options.env.PATH, Path.join(project.path, 'node_modules', '.bin')].join(Path.delimiter),
-      })
+      options.env.PATH = [options.env.PATH, Path.join(project.path, 'node_modules', '.bin')].join(Path.delimiter)
     }
     return new Promise((resolve, reject) => {
       const spawned = ChildProcess.spawn(name, parameters, options)
