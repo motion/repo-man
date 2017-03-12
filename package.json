@@ -6,7 +6,8 @@
     "repoman": "./lib/cli.js"
   },
   "scripts": {
-    "build": "rm -rf lib; babel src --out-dir lib",
+    "clean": "rimraf lib",
+    "build": "npm run clean && babel src --out-dir lib",
     "watch": "npm run build -- --watch"
   },
   "author": "Motion (motion.io)",
@@ -14,7 +15,8 @@
   "devDependencies": {
     "babel-cli": "^6.22.2",
     "babel-preset-steelbrain": "^4.0.2",
-    "flow-bin": "^0.38.0"
+    "flow-bin": "^0.38.0",
+    "rimraf": "^2.6.1"
   },
   "dependencies": {
     "cli-color": "^1.1.0",

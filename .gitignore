@@ -3,3 +3,4 @@ lib
 .DS_Store
 .vscode
 shrinkwrap.yaml
+npm-debug.log*
