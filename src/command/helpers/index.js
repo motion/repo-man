@@ -20,11 +20,11 @@ function split(contents: string, delimiter: string): Array<string> {
 }
 
 const KEYS_TO_NORMALIZE = { PATH: Path.delimiter }
-export function cloneEnv(givenEnv: Object): string {
+function cloneEnv(givenEnv: Object): string {
   const env = Object.assign({}, givenEnv)
-  for (const key in process.env) {
+  for (const key in env) {
     const upperKey = key.toUpperCase()
-    if (!KEYS_TO_NORMALIZE[upperKey]) continue
+    if (!KEYS_TO_NORMALIZE[upperKey] || key.toUpperCase() === key) continue
     if (!{}.hasOwnProperty.call(env, key)) continue
 
     if (!env[upperKey]) {
